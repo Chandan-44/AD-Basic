@@ -1,0 +1,3462 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AD Concepts · Active Directory Explained</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #141b24;
+      --surface2: #1e2936;
+      --border: #2a3a4a;
+      --text: #e6edf5;
+      --text-dim: #9aaec2;
+      --accent: #2dd4bf;
+      --accent2: #3b82f6;
+      --danger: #f87171;
+      --warn: #fbbf24;
+      --success: #4ade80;
+      --purple: #c084fc;
+      --code-bg: #0a0f14;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      --radius: 14px;
+      --sidebar-width: 290px;
+      --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0b1e2e;
+      --text-dim: #475569;
+      --accent: #0d9488;
+      --accent2: #2563eb;
+      --danger: #dc2626;
+      --warn: #d97706;
+      --success: #16a34a;
+      --purple: #9333ea;
+      --code-bg: #1e293b;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      transition: background 0.2s, color 0.2s;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    #sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-width); height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto; padding: 1.2rem 0.8rem;
+      z-index: 100; transition: transform 0.3s;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+
+    #sidebar .logo {
+      font-size: 1.3rem; font-weight: 800;
+      letter-spacing: -0.5px;
+      padding: 0.5rem 0.8rem 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.6rem;
+    }
+
+    #sidebar .logo span { color: var(--accent); }
+
+    .nav-group { margin-bottom: 0.4rem; }
+
+    .nav-group-title {
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--text-dim);
+      padding: 0.6rem 0.8rem 0.2rem; font-weight: 700;
+    }
+
+    .nav-link {
+      display: block; padding: 0.4rem 0.8rem;
+      color: var(--text-dim); text-decoration: none;
+      border-radius: 8px; font-size: 0.88rem;
+      transition: all 0.15s; cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-link:hover { background: var(--surface2); color: var(--text); }
+    .nav-link.active {
+      background: var(--surface2); color: var(--accent);
+      border-left-color: var(--accent); font-weight: 600;
+    }
+
+    #main {
+      margin-left: var(--sidebar-width);
+      padding: 1.5rem 2.5rem 4rem;
+      max-width: 1150px;
+    }
+
+    .topbar {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1rem;
+      margin-bottom: 2rem; position: sticky; top: 0;
+      z-index: 50; background: var(--bg);
+      padding: 0.8rem 0; border-bottom: 1px solid var(--border);
+    }
+
+    .search-box { flex: 1; min-width: 200px; max-width: 500px; position: relative; }
+
+    .search-box input {
+      width: 100%; padding: 0.7rem 1rem 0.7rem 2.4rem;
+      border-radius: 50px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+      font-size: 0.9rem; outline: none; transition: border 0.2s;
+    }
+
+    .search-box input:focus { border-color: var(--accent); }
+
+    .search-box::before {
+      content: "🔍"; position: absolute; left: 0.9rem;
+      top: 50%; transform: translateY(-50%);
+      font-size: 0.9rem; opacity: 0.6;
+    }
+
+    .theme-toggle {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); padding: 0.6rem 1rem;
+      border-radius: 50px; cursor: pointer;
+      font-size: 0.9rem; transition: all 0.2s;
+    }
+
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    .section { margin-bottom: 2.5rem; scroll-margin-top: 80px; }
+
+    .section h2 {
+      font-size: 1.7rem; font-weight: 700;
+      margin-bottom: 0.5rem; display: flex;
+      align-items: center; gap: 0.6rem;
+    }
+
+    .section h2 .badge {
+      font-size: 0.7rem; background: var(--accent);
+      color: #0b0f17; padding: 0.15rem 0.6rem;
+      border-radius: 50px; font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .section h3 {
+      font-size: 1.25rem; margin: 1.5rem 0 0.7rem;
+      color: var(--accent); font-weight: 600;
+    }
+
+    .section h4 {
+      font-size: 1.05rem; margin: 1rem 0 0.4rem;
+      color: var(--text); font-weight: 600;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem; margin-bottom: 1.2rem;
+      box-shadow: var(--shadow); transition: border 0.2s;
+    }
+
+    .card:hover { border-color: var(--accent); }
+    .card.warn { border-left: 4px solid var(--warn); }
+    .card.danger { border-left: 4px solid var(--danger); }
+    .card.success { border-left: 4px solid var(--success); }
+    .card.info { border-left: 4px solid var(--accent2); }
+    .card.purple { border-left: 4px solid var(--purple); }
+
+    .callout {
+      background: var(--surface2);
+      border-left: 4px solid var(--accent2);
+      padding: 1rem 1.2rem;
+      border-radius: 8px; margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+
+    .callout.warn { border-left-color: var(--warn); }
+    .callout.danger { border-left-color: var(--danger); }
+    .callout.success { border-left-color: var(--success); }
+    .callout.purple { border-left-color: var(--purple); }
+    .callout strong { color: var(--accent); }
+
+    .code-block {
+      position: relative; background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px; margin: 0.8rem 0;
+      overflow: hidden; font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+
+    .code-header {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .code-header button {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim); padding: 0.2rem 0.7rem;
+      border-radius: 5px; cursor: pointer;
+      font-size: 0.7rem; transition: all 0.15s;
+    }
+
+    .code-header button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .code-block pre {
+      padding: 1rem; overflow-x: auto;
+      color: #e2e8f0; line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .code-block pre .cmd { color: #4ade80; }
+    .code-block pre .comment { color: #64748b; font-style: italic; }
+    .code-block pre .highlight-line { color: #fbbf24; font-weight: 600; }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      margin: 1rem 0; font-size: 0.88rem;
+      border-radius: 10px; overflow: hidden;
+    }
+
+    th, td {
+      padding: 0.7rem 1rem; text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface2); color: var(--accent);
+      font-weight: 600; text-transform: uppercase;
+      font-size: 0.72rem; letter-spacing: 1px;
+    }
+
+    tr:hover { background: var(--surface2); }
+
+    .accordion {
+      border: 1px solid var(--border);
+      border-radius: 10px; margin: 0.6rem 0; overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 0.9rem 1.2rem; background: var(--surface2);
+      cursor: pointer; font-weight: 600;
+      display: flex; justify-content: space-between;
+      align-items: center; transition: background 0.15s;
+    }
+
+    .accordion-header:hover { background: var(--border); }
+
+    .accordion-header::after {
+      content: "▸"; transition: transform 0.2s;
+    }
+
+    .accordion.open .accordion-header::after { transform: rotate(90deg); }
+
+    .accordion-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.5s ease;
+      padding: 0 1.2rem; background: var(--surface);
+    }
+
+    .accordion.open .accordion-body {
+      max-height: 12000px; padding: 1rem 1.2rem;
+    }
+
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .checklist li { display: flex; align-items: flex-start; gap: 0.7rem; font-size: 0.92rem; }
+    .checklist input[type="checkbox"] {
+      margin-top: 0.25rem; accent-color: var(--accent);
+      width: 18px; height: 18px; cursor: pointer;
+    }
+
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: var(--accent); z-index: 200;
+      transition: width 0.1s;
+    }
+
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--accent); color: #0b0f17;
+      border: none; width: 48px; height: 48px;
+      border-radius: 50%; cursor: pointer;
+      font-size: 1.2rem; display: none;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(45, 212, 191, 0.4);
+      z-index: 150; transition: transform 0.2s;
+    }
+
+    #backToTop:hover { transform: scale(1.1); }
+
+    .highlight {
+      background: rgba(251, 191, 36, 0.35);
+      border-radius: 3px; padding: 0 2px;
+    }
+
+    .nav-buttons {
+      display: flex; justify-content: space-between;
+      margin-top: 3rem; gap: 1rem;
+    }
+
+    .nav-buttons button {
+      padding: 0.8rem 1.5rem; background: var(--surface);
+      border: 1px solid var(--border); color: var(--text);
+      border-radius: 10px; cursor: pointer;
+      font-size: 0.9rem; transition: all 0.2s;
+    }
+
+    .nav-buttons button:hover { border-color: var(--accent); background: var(--surface2); }
+
+    @media (max-width: 900px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; padding: 1rem; }
+      .menu-toggle { display: block !important; }
+    }
+
+    .menu-toggle {
+      display: none; background: var(--surface);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.5rem 0.8rem; border-radius: 8px;
+      cursor: pointer; font-size: 1.2rem;
+    }
+
+    .hidden { display: none !important; }
+
+    ul, ol { padding-left: 1.3rem; margin: 0.5rem 0; }
+    li { margin: 0.3rem 0; }
+    p { margin: 0.6rem 0; }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr; } }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 700px) {
+      .why-grid { grid-template-columns: 1fr; }
+    }
+
+    .why-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      border-left: 3px solid var(--accent);
+      transition: border 0.2s;
+    }
+
+    .why-card:hover {
+      border-left-color: var(--accent2);
+      background: var(--surface);
+    }
+
+    .why-card .label {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+      padding: 0.15rem 0.5rem;
+      background: rgba(45, 212, 191, 0.1);
+      border-radius: 4px;
+    }
+
+    .why-card .label.why { color: var(--warn); background: rgba(251, 191, 36, 0.1); }
+    .why-card .label.how { color: var(--accent2); background: rgba(59, 130, 246, 0.1); }
+    .why-card .label.when { color: var(--success); background: rgba(74, 222, 128, 0.1); }
+    .why-card .label.example { color: var(--purple); background: rgba(192, 132, 252, 0.1); }
+
+    .why-card p {
+      font-size: 0.88rem;
+      margin: 0.3rem 0 0;
+      color: var(--text);
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+    }
+
+    .flow .step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+
+    .flow .arrow {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .section-intro {
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+    }
+
+    .section-intro strong { color: var(--accent); }
+
+    .mental-model {
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px dashed var(--accent2);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    .mental-model .title {
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 0.4rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .example-box {
+      background: rgba(192, 132, 252, 0.06);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+      border-left: 4px solid var(--purple);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    .example-box .title {
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .example-box p { margin: 0.4rem 0; }
+    .example-box code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.08);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    /* ===== DIAGRAM BOX ===== */
+    .diagram {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.2rem 0;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre;
+      position: relative;
+    }
+
+    .diagram::before {
+      content: "📊 DIAGRAM";
+      position: absolute;
+      top: 0.6rem;
+      right: 1rem;
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      font-family: var(--font);
+      font-weight: 700;
+    }
+
+    /* ===== COMPONENT CARDS ===== */
+    .components {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.8rem;
+      margin: 1.2rem 0;
+    }
+
+    .component {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      transition: all 0.2s;
+      border-top: 3px solid var(--accent);
+    }
+
+    .component:hover {
+      transform: translateY(-2px);
+      border-top-color: var(--accent2);
+      box-shadow: 0 6px 16px rgba(45, 212, 191, 0.1);
+    }
+
+    .component .comp-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.4rem;
+      display: block;
+    }
+
+    .component .comp-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+
+    .component .comp-desc {
+      font-size: 0.83rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ===== LAYER DIAGRAM ===== */
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 1.2rem 0;
+    }
+
+    .layer {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s;
+      border-left: 4px solid var(--accent);
+    }
+
+    .layer:hover {
+      border-left-color: var(--accent2);
+      background: var(--surface);
+      transform: translateX(4px);
+    }
+
+    .layer .layer-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .layer .layer-info {
+      flex: 1;
+    }
+
+    .layer .layer-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 0.15rem;
+    }
+
+    .layer .layer-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .layer .layer-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      background: rgba(45, 212, 191, 0.1);
+      color: var(--accent);
+      border-radius: 50px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ===== TREE / HIERARCHY ===== */
+    .tree {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin: 1rem 0;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .tree .node-root { color: var(--accent); font-weight: 700; }
+    .tree .node-domain { color: var(--accent2); font-weight: 600; }
+    .tree .node-ou { color: var(--warn); font-weight: 600; }
+    .tree .node-object { color: #cbd5e1; }
+    .tree .node-meta { color: #64748b; font-style: italic; }
+
+    /* ===== TIMELINE / FLOW DIAGRAM ===== */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1.2rem 0;
+      position: relative;
+    }
+
+    .timeline-step {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+      padding-bottom: 1.2rem;
+    }
+
+    .timeline-step:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 40px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--accent);
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .timeline-content {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1.2rem;
+      border-left: 3px solid var(--accent);
+    }
+
+    .timeline-content .tl-title {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.92rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .timeline-content .tl-desc {
+      font-size: 0.84rem;
+      color: var(--text-dim);
+    }
+
+    .author-footer {
+      margin-top: 4rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: var(--radius);
+      text-align: center;
+    }
+
+    .author-footer h3 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+      justify-content: center;
+    }
+
+    .author-footer .author-name {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0.5rem 0;
+    }
+
+    .author-footer .tagline {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .author-links {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .author-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .author-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45, 212, 191, 0.2);
+    }
+
+    .author-link .icon { font-size: 1.1rem; }
+
+    .author-link.linkedin:hover { border-color: #0a66c2; color: #0a66c2; }
+    .author-link.medium:hover { border-color: #ffffff; color: #ffffff; }
+    .author-link.github:hover { border-color: #a855f7; color: #a855f7; }
+
+    .sidebar-author {
+      margin-top: auto;
+      padding: 1rem 0.8rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .sidebar-author strong {
+      color: var(--accent);
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .sidebar-author a {
+      color: var(--text-dim);
+      text-decoration: none;
+      display: inline-block;
+      margin: 0.15rem 0.3rem;
+      font-size: 0.75rem;
+    }
+
+    .sidebar-author a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+  <nav id="sidebar">
+    <div class="logo">📖 <span>AD</span> Concepts</div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Getting Started</div>
+      <a class="nav-link active" data-target="home">🏠 Overview</a>
+      <a class="nav-link" data-target="why-ad">💡 Why AD Exists</a>
+      <a class="nav-link" data-target="big-picture">🗺️ Big Picture</a>
+      <a class="nav-link" data-target="physical-logical">🧩 Physical vs Logical</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Structural Concepts</div>
+      <a class="nav-link" data-target="forest">🌲 Forest</a>
+      <a class="nav-link" data-target="domain">🏛️ Domain</a>
+      <a class="nav-link" data-target="ou">📂 Organizational Units</a>
+      <a class="nav-link" data-target="site">🌐 Sites</a>
+      <a class="nav-link" data-target="dc">🖥️ Domain Controller</a>
+      <a class="nav-link" data-target="gc">📚 Global Catalog</a>
+      <a class="nav-link" data-target="fsmo">👑 FSMO Roles</a>
+      <a class="nav-link" data-target="partitions">🗄️ AD Partitions</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Identity Concepts</div>
+      <a class="nav-link" data-target="objects">🧩 Objects</a>
+      <a class="nav-link" data-target="users">👤 Users</a>
+      <a class="nav-link" data-target="groups">👥 Groups</a>
+      <a class="nav-link" data-target="computers">💻 Computers</a>
+      <a class="nav-link" data-target="service-accounts">⚙️ Service Accounts</a>
+      <a class="nav-link" data-target="sid">🔢 SIDs</a>
+      <a class="nav-link" data-target="schema">📐 Schema</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Permission Concepts</div>
+      <a class="nav-link" data-target="acl">📋 ACLs</a>
+      <a class="nav-link" data-target="acl-types">🔐 DACL vs SACL</a>
+      <a class="nav-link" data-target="inheritance">🌳 Inheritance</a>
+      <a class="nav-link" data-target="token">🎫 Access Tokens</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Authentication</div>
+      <a class="nav-link" data-target="auth-basics">🔑 Auth Basics</a>
+      <a class="nav-link" data-target="logon-process">🚪 Logon Process</a>
+      <a class="nav-link" data-target="kerberos">🎟️ Kerberos</a>
+      <a class="nav-link" data-target="ntlm">🔒 NTLM</a>
+      <a class="nav-link" data-target="ldap">📖 LDAP</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Advanced Concepts</div>
+      <a class="nav-link" data-target="trusts">🔗 Trusts</a>
+      <a class="nav-link" data-target="delegation">🎫 Delegation</a>
+      <a class="nav-link" data-target="gpo">📝 GPOs</a>
+      <a class="nav-link" data-target="adcs">📜 ADCS</a>
+      <a class="nav-link" data-target="dns">🌐 DNS</a>
+      <a class="nav-link" data-target="replication">🔄 Replication</a>
+      <a class="nav-link" data-target="fsmo2">⏱️ Time Sync</a>
+      <a class="nav-link" data-target="frs">📁 SYSVOL & FRS</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Reference</div>
+      <a class="nav-link" data-target="glossary">📚 Glossary</a>
+      <a class="nav-link" data-target="faq">❓ Common Questions</a>
+    </div>
+
+    <div class="sidebar-author">
+      <strong>Made by Chandan Kumar</strong>
+      <a href="https://linkedin.com/in/chandan-kumar-eh" target="_blank" rel="noopener">LinkedIn</a> ·
+      <a href="https://medium.com/@chandan20516" target="_blank" rel="noopener">Medium</a> ·
+      <a href="https://github.com/chandan-44" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </nav>
+
+  <div id="main">
+
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search AD concepts...">
+      </div>
+      <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+    </div>
+
+    <!-- ==================== HOME ==================== -->
+    <section class="section" id="home">
+      <h2>📖 Active Directory <span class="badge">Concepts</span></h2>
+      <p style="font-size:1.05rem; color: var(--text-dim); max-width: 800px;">
+        A visual, example-driven explanation of every core Active Directory concept.
+        Includes detailed diagrams, component breakdowns, and layered structures.
+      </p>
+
+      <div class="grid-3" style="margin-top:1.5rem;">
+        <div class="card info">
+          <h4>🏗️ Structure</h4>
+          <p>Forests, domains, OUs, sites, DCs, FSMO, partitions.</p>
+        </div>
+        <div class="card purple">
+          <h4>🧩 Identity</h4>
+          <p>Objects, users, groups, computers, service accounts, SIDs, schema.</p>
+        </div>
+        <div class="card success">
+          <h4>🔑 Auth</h4>
+          <p>Kerberos, NTLM, LDAP, logon process, tokens.</p>
+        </div>
+      </div>
+
+      <div class="callout purple">
+        <strong>📊 Visual Learning:</strong> This guide uses diagrams, component cards, layered views, and timelines to make every concept intuitive — not just text.
+      </div>
+
+      <div class="mental-model">
+        <div class="title">🧠 The One-Sentence Summary of AD</div>
+        <p style="font-weight:600; color: var(--accent);">
+          "Active Directory is a database of objects (users, computers, groups) plus a set of rules and protocols that let those objects find each other, authenticate, and be authorized to access resources."
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== WHY AD ==================== -->
+    <section class="section" id="why-ad">
+      <h2>💡 Why Active Directory Exists</h2>
+
+      <div class="section-intro">
+        <strong>Before AD, every computer had its own list of users.</strong> Managing 500 computers and 500 employees meant creating 500 × 500 accounts. AD solved this.
+      </div>
+
+      <div class="grid-2">
+        <div class="card danger">
+          <h4>❌ Without AD (Workgroup)</h4>
+          <ul>
+            <li>Every computer has its own user database</li>
+            <li>Same user must exist on every machine</li>
+            <li>Password changes repeated everywhere</li>
+            <li>No centralized control</li>
+            <li>No single sign-on</li>
+            <li>Scaling is painful</li>
+          </ul>
+        </div>
+        <div class="card success">
+          <h4>✅ With AD (Domain)</h4>
+          <ul>
+            <li>One central database</li>
+            <li>One account works everywhere</li>
+            <li>Changes propagate automatically</li>
+            <li>Centralized policy</li>
+            <li>Single sign-on</li>
+            <li>Scales to millions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Simple Example</div>
+        <p>An admin at <code>contoso.com</code> with 200 employees and 300 computers.</p>
+        <p><strong>Without AD:</strong> To give Alice access to 5 machines, you'd create her account 5 times.</p>
+        <p><strong>With AD:</strong> You create Alice's account once. She can log in to any of the 300 machines.</p>
+      </div>
+    </section>
+
+    <!-- ==================== BIG PICTURE ==================== -->
+    <section class="section" id="big-picture">
+      <h2>🗺️ The Big Picture</h2>
+
+      <div class="section-intro">
+        <strong>AD is hierarchical and layered.</strong> Understanding the layers helps you understand everything else.
+      </div>
+
+      <h3>Full AD Hierarchy Diagram</h3>
+      <div class="tree"><span class="node-root">🏢 FOREST (contoso.com)</span>
+│
+├── <span class="node-domain">🏛️ DOMAIN (contoso.com)</span> <span class="node-meta">← primary domain</span>
+│   │
+│   ├── <span class="node-object">🖥️ DC01.contoso.com</span> <span class="node-meta">← domain controller</span>
+│   ├── <span class="node-object">🖥️ DC02.contoso.com</span> <span class="node-meta">← for redundancy</span>
+│   │
+│   ├── <span class="node-ou">📂 OU: Employees</span>
+│   │   ├── <span class="node-ou">📂 OU: Sales</span>
+│   │   │   ├── <span class="node-object">👤 alice</span>
+│   │   │   └── <span class="node-object">👤 bob</span>
+│   │   └── <span class="node-ou">📂 OU: Engineering</span>
+│   │       ├── <span class="node-object">👤 carol</span>
+│   │       └── <span class="node-object">👤 dave</span>
+│   │
+│   └── <span class="node-ou">📂 OU: Servers</span>
+│       ├── <span class="node-object">💻 WEB01</span>
+│       └── <span class="node-object">💻 SQL01</span>
+│
+└── <span class="node-domain">🏛️ DOMAIN (emea.contoso.com)</span> <span class="node-meta">← child domain</span>
+    └── <span class="node-meta">...its own users, computers, DCs...</span></div>
+
+      <h3>AD Layer Model</h3>
+      <div class="layers">
+        <div class="layer">
+          <span class="layer-icon">🌲</span>
+          <div class="layer-info">
+            <div class="layer-title">Forest Layer</div>
+            <div class="layer-desc">Security boundary · shared schema · global catalog</div>
+          </div>
+          <span class="layer-tag">Boundary</span>
+        </div>
+        <div class="layer">
+          <span class="layer-icon">🏛️</span>
+          <div class="layer-info">
+            <div class="layer-title">Domain Layer</div>
+            <div class="layer-desc">Authentication · policy · user database</div>
+          </div>
+          <span class="layer-tag">Security</span>
+        </div>
+        <div class="layer">
+          <span class="layer-icon">📂</span>
+          <div class="layer-info">
+            <div class="layer-title">Organizational Layer</div>
+            <div class="layer-desc">OUs · Group Policy · delegation</div>
+          </div>
+          <span class="layer-tag">Admin</span>
+        </div>
+        <div class="layer">
+          <span class="layer-icon">🌐</span>
+          <div class="layer-info">
+            <div class="layer-title">Physical Layer</div>
+            <div class="layer-desc">Sites · subnets · replication topology</div>
+          </div>
+          <span class="layer-tag">Network</span>
+        </div>
+        <div class="layer">
+          <span class="layer-icon">🧩</span>
+          <div class="layer-info">
+            <div class="layer-title">Object Layer</div>
+            <div class="layer-desc">Users · groups · computers · GPOs</div>
+          </div>
+          <span class="layer-tag">Data</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PHYSICAL VS LOGICAL ==================== -->
+    <section class="section" id="physical-logical">
+      <h2>🧩 Physical vs Logical Structure</h2>
+
+      <div class="section-intro">
+        <strong>AD has two parallel structures:</strong> a <em>logical</em> one (how you organize identity) and a <em>physical</em> one (how the network is laid out). They serve different purposes.
+      </div>
+
+      <div class="grid-2">
+        <div class="card info">
+          <h4>🧠 Logical Structure</h4>
+          <p><strong>Purpose:</strong> Organize identity and manage permissions</p>
+          <ul>
+            <li>Forest</li>
+            <li>Domain</li>
+            <li>Organizational Unit (OU)</li>
+            <li>Objects (users, groups, computers)</li>
+          </ul>
+          <p style="margin-top:0.6rem; color:var(--text-dim); font-size:0.85rem;">
+            <em>Answers:</em> "Who are you and what are you allowed to do?"
+          </p>
+        </div>
+        <div class="card purple">
+          <h4>🌐 Physical Structure</h4>
+          <p><strong>Purpose:</strong> Control replication and network traffic</p>
+          <ul>
+            <li>Site</li>
+            <li>Subnet</li>
+            <li>Site link</li>
+            <li>Bridgehead server</li>
+          </ul>
+          <p style="margin-top:0.6rem; color:var(--text-dim); font-size:0.85rem;">
+            <em>Answers:</em> "Where are you and how do we reach you?"
+          </p>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Why Both Matter</div>
+        <p><strong>Logical view:</strong> Alice is in the Sales OU → she gets the Sales GPO.</p>
+        <p><strong>Physical view:</strong> Alice is in the London site → she authenticates against the London DC.</p>
+        <p>Same user, two different lenses. Logical decides <em>what applies</em>. Physical decides <em>who serves you</em>.</p>
+      </div>
+    </section>
+
+    <!-- ==================== FOREST ==================== -->
+    <section class="section" id="forest">
+      <h2>🌲 Forest</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>The top-level container. A collection of one or more domains sharing a common schema, configuration, and global catalog.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Defines the security boundary. Within a forest, domains trust each other automatically.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Identified by its root domain. All child domains share the schema.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Contoso has <code>contoso.com</code>, <code>emea.contoso.com</code>, and <code>asia.contoso.com</code> — all one forest.</p>
+        </div>
+      </div>
+
+      <h3>Forest Components Diagram</h3>
+      <div class="tree"><span class="node-root">🌲 FOREST (root: contoso.com)</span>
+│
+├── <span class="node-meta">Shared Components (exist once):</span>
+│   ├── 📐 Schema
+│   ├── ⚙️ Configuration Partition
+│   ├── 📚 Global Catalog
+│   ├── 👑 Schema Master FSMO
+│   └── 👑 Domain Naming Master FSMO
+│
+└── <span class="node-meta">Member Domains:</span>
+    ├── <span class="node-domain">🏛️ contoso.com</span>
+    ├── <span class="node-domain">🏛️ emea.contoso.com</span>
+    └── <span class="node-domain">🏛️ asia.contoso.com</span></div>
+
+      <h3>Forest Component Cards</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">📐</span>
+          <div class="comp-title">Schema</div>
+          <div class="comp-desc">Defines every object class and attribute. Shared across all domains.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⚙️</span>
+          <div class="comp-title">Configuration</div>
+          <div class="comp-desc">Holds sites, services, and replication topology. Forest-wide.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📚</span>
+          <div class="comp-title">Global Catalog</div>
+          <div class="comp-desc">Partial copy of all objects in every domain. Enables cross-domain search.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">👑</span>
+          <div class="comp-title">Schema Master</div>
+          <div class="comp-desc">FSMO role controlling schema changes.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">👑</span>
+          <div class="comp-title">Domain Naming Master</div>
+          <div class="comp-desc">FSMO role controlling adding/removing domains.</div>
+        </div>
+      </div>
+
+      <div class="mental-model">
+        <div class="title">🧠 Mental Model</div>
+        <p>A forest is like <strong>a country</strong>. It shares one constitution (schema), one map (config), and one ID system (global catalog). Domains are like states.</p>
+      </div>
+    </section>
+
+    <!-- ==================== DOMAIN ==================== -->
+    <section class="section" id="domain">
+      <h2>🏛️ Domain</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A logical grouping of users, computers, and objects sharing a common directory database and security policy.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Domains let organizations delegate administration, apply different policies, and separate resources.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Each domain has its own DCs, user database, and security policies.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p><code>contoso.com</code> has its own DCs, users, and GPOs, separate from <code>emea.contoso.com</code>.</p>
+        </div>
+      </div>
+
+      <h3>Domain Components Diagram</h3>
+      <div class="tree"><span class="node-domain">🏛️ DOMAIN (contoso.com)</span>
+│
+├── <span class="node-meta">Identity:</span>
+│   ├── 👤 Users
+│   ├── 👥 Groups
+│   └── 💻 Computers
+│
+├── <span class="node-meta">Infrastructure:</span>
+│   ├── 🖥️ Domain Controllers
+│   ├── 🌐 DNS Zone
+│   └── ⏱️ Time Source
+│
+├── <span class="node-meta">Policy:</span>
+│   ├── 📝 Group Policy Objects
+│   └── 🔐 Security Policies
+│
+└── <span class="node-meta">Directory Partitions:</span>
+    ├── Domain Partition (users, groups, computers)
+    ├── Configuration Partition (forest-wide)
+    └── Schema Partition (forest-wide)</div>
+
+      <h3>Domain Component Cards</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">🖥️</span>
+          <div class="comp-title">Domain Controllers</div>
+          <div class="comp-desc">Servers that host the domain database and authenticate users.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🗄️</span>
+          <div class="comp-title">NTDS.dit</div>
+          <div class="comp-desc">The domain database file — contains all objects and hashes.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🌐</span>
+          <div class="comp-title">DNS Zone</div>
+          <div class="comp-desc">AD-integrated DNS stores service records for DC discovery.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📝</span>
+          <div class="comp-title">GPOs</div>
+          <div class="comp-desc">Group Policy Objects applied to OUs, sites, or the domain.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⏱️</span>
+          <div class="comp-title">Time Source</div>
+          <div class="comp-desc">PDC Emulator provides accurate time for Kerberos.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔐</span>
+          <div class="comp-title">Security Policies</div>
+          <div class="comp-desc">Password policy, lockout policy, Kerberos policy.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== OU ==================== -->
+    <section class="section" id="ou">
+      <h2>📂 Organizational Units (OUs)</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>Containers inside a domain used to organize objects. Primary way to apply Group Policy and delegate administration.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Large organizations need different rules for different groups. OUs allow fine-grained control.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>OUs are hierarchical and can be nested. You can delegate control at the OU level.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>An <code>Employees</code> OU with sub-OUs for <code>Sales</code>, <code>Engineering</code>, and <code>HR</code>.</p>
+        </div>
+      </div>
+
+      <h3>OU Tree Diagram</h3>
+      <div class="tree"><span class="node-domain">🏛️ contoso.com</span>
+│
+└── <span class="node-ou">📂 OU: Employees</span>
+    ├── <span class="node-ou">📂 OU: Sales</span>
+    │   ├── <span class="node-object">👤 alice</span>
+    │   └── <span class="node-object">👤 bob</span>
+    │
+    ├── <span class="node-ou">📂 OU: Engineering</span>
+    │   ├── <span class="node-ou">📂 OU: Backend</span>
+    │   │   └── <span class="node-object">👤 carol</span>
+    │   └── <span class="node-ou">📂 OU: Frontend</span>
+    │       └── <span class="node-object">👤 dave</span>
+    │
+    └── <span class="node-ou">📂 OU: HR</span>
+        └── <span class="node-object">👤 eve</span></div>
+
+      <div class="callout">
+        <strong>Important:</strong> OUs are <em>not</em> security boundaries. The security boundary is the forest. OUs are administrative containers.
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Why OUs Matter</div>
+        <p>Say you want a strict password policy for IT staff but a lenient one for Sales.</p>
+        <p>You put IT in one OU and Sales in another. Link different GPOs to each OU.</p>
+        <p>Result: <strong>same domain, different rules</strong>.</p>
+      </div>
+    </section>
+
+    <!-- ==================== SITE ==================== -->
+    <section class="section" id="site">
+      <h2>🌐 Sites</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A physical network location defined by IP subnets. Helps AD route authentication to the nearest DC.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Without sites, a user in Tokyo might authenticate against a DC in New York — slow and wasteful.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Each site is associated with subnets. Computers determine their site by IP.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Site <code>Tokyo</code> has subnet <code>10.1.0.0/16</code>. Site <code>NewYork</code> has <code>10.2.0.0/16</code>.</p>
+        </div>
+      </div>
+
+      <h3>Site Topology Diagram</h3>
+      <div class="tree"><span class="node-root">🌍 Forest: contoso.com</span>
+│
+├── <span class="node-domain">🌐 SITE: New York</span>  <span class="node-meta">subnet 10.10.0.0/16</span>
+│   ├── 🖥️ NY-DC01
+│   ├── 🖥️ NY-DC02
+│   └── 💻 Workstations
+│
+├── <span class="node-domain">🌐 SITE: London</span>  <span class="node-meta">subnet 10.20.0.0/16</span>
+│   ├── 🖥️ LON-DC01
+│   └── 💻 Workstations
+│
+└── <span class="node-domain">🌐 SITE: Singapore</span>  <span class="node-meta">subnet 10.30.0.0/16</span>
+    ├── 🖥️ SIN-DC01
+    └── 💻 Workstations
+
+<span class="node-meta">SITE LINKS (replication):</span>
+<span class="node-meta">New York  ⟷  London  ⟷  Singapore</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Real-World Site Example</div>
+        <p>A multinational company has three offices:</p>
+        <ul>
+          <li><strong>New York</strong> — DC: NY-DC01</li>
+          <li><strong>London</strong> — DC: LON-DC01</li>
+          <li><strong>Singapore</strong> — DC: SIN-DC01</li>
+        </ul>
+        <p>When Alice in London logs in, AD routes authentication to <code>LON-DC01</code> — not to New York or Singapore.</p>
+      </div>
+    </section>
+
+    <!-- ==================== DC ==================== -->
+    <section class="section" id="dc">
+      <h2>🖥️ Domain Controller (DC)</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A server that hosts a copy of the AD database and provides authentication, authorization, and directory services.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>AD needs authoritative sources. DCs are those sources.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>DCs run AD DS and replicate with each other. Every DC has a full copy of the domain database.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>In a domain with 3 DCs, all 3 have the same data. If one fails, the others continue.</p>
+        </div>
+      </div>
+
+      <h3>What a DC Does — Component Breakdown</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">🔐</span>
+          <div class="comp-title">Authentication</div>
+          <div class="comp-desc">Verifies credentials via Kerberos or NTLM.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📖</span>
+          <div class="comp-title">Directory Services</div>
+          <div class="comp-desc">Answers LDAP queries about objects.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔄</span>
+          <div class="comp-title">Replication</div>
+          <div class="comp-desc">Syncs directory data with other DCs.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🌐</span>
+          <div class="comp-title">DNS</div>
+          <div class="comp-desc">Often hosts AD-integrated DNS.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⏱️</span>
+          <div class="comp-title">Time Source</div>
+          <div class="comp-desc">Provides accurate time for Kerberos.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">👑</span>
+          <div class="comp-title">FSMO Roles</div>
+          <div class="comp-desc">Some DCs hold special roles.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🗄️</span>
+          <div class="comp-title">NTDS.dit</div>
+          <div class="comp-desc">The AD database — all objects live here.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📁</span>
+          <div class="comp-title">SYSVOL</div>
+          <div class="comp-desc">Shared folder with GPOs and logon scripts.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 What Happens When You Log In</div>
+        <ol>
+          <li>Workstation finds nearest DC (DNS + sites)</li>
+          <li>Workstation sends authentication request</li>
+          <li>DC verifies credentials</li>
+          <li>DC issues a Kerberos TGT</li>
+          <li>Workstation uses TGT to access resources</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ==================== GC ==================== -->
+    <section class="section" id="gc">
+      <h2>📚 Global Catalog</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A partial, read-only copy of every object in every domain in the forest. Allows fast cross-domain lookups.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Searching across all domains would be slow. The GC centralizes common attributes.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Any DC can be configured as a Global Catalog server. In single-domain forests, every DC is a GC.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Searching for "Bob" in Outlook hits the GC — which knows Bob regardless of domain.</p>
+        </div>
+      </div>
+
+      <h3>GC Lookup Flow</h3>
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="timeline-dot">1</div>
+          <div class="timeline-content">
+            <div class="tl-title">Client Query</div>
+            <div class="tl-desc">Alice searches for "Bob" in the global address list.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">2</div>
+          <div class="timeline-content">
+            <div class="tl-title">GC Port Query (3268)</div>
+            <div class="tl-desc">Query goes to the Global Catalog — a partial copy of every domain's objects.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">3</div>
+          <div class="timeline-content">
+            <div class="tl-title">Result Returned</div>
+            <div class="tl-desc">GC returns matching objects with their common attributes — no need to query each domain.</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>What's in the GC vs What's Not</h3>
+      <table>
+        <tr><th>In Global Catalog ✅</th><th>Not in Global Catalog ❌</th></tr>
+        <tr><td>Display name</td><td>Full password hashes (in domain partition only)</td></tr>
+        <tr><td>Email address</td><td>Some application-specific attributes</td></tr>
+        <tr><td>Group memberships</td><td>Detailed security descriptors</td></tr>
+        <tr><td>SID</td><td>Complete attribute set of every object</td></tr>
+        <tr><td>UPN, sAMAccountName</td><td>Large binary attributes</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== FSMO ==================== -->
+    <section class="section" id="fsmo">
+      <h2>👑 FSMO Roles</h2>
+
+      <div class="section-intro">
+        <strong>FSMO = Flexible Single Master Operations.</strong> Five special roles that must be held by specific DCs to avoid conflicts.
+      </div>
+
+      <h3>FSMO Role Hierarchy Diagram</h3>
+      <div class="tree"><span class="node-root">🌲 FOREST-LEVEL ROLES (1 each per forest)</span>
+│
+├── <span class="node-object">👑 Schema Master</span>
+│   <span class="node-meta">→ Controls changes to the AD schema</span>
+│
+└── <span class="node-object">👑 Domain Naming Master</span>
+    <span class="node-meta">→ Controls adding/removing domains</span>
+
+<span class="node-domain">🏛️ DOMAIN-LEVEL ROLES (1 each per domain)</span>
+│
+├── <span class="node-object">👑 RID Master</span>
+│   <span class="node-meta">→ Allocates RID pools for SID generation</span>
+│
+├── <span class="node-object">👑 PDC Emulator</span>
+│   <span class="node-meta">→ Password changes, time sync, legacy ops</span>
+│
+└── <span class="node-object">👑 Infrastructure Master</span>
+    <span class="node-meta">→ Cross-domain object references</span></div>
+
+      <h3>FSMO Component Cards</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">📐</span>
+          <div class="comp-title">Schema Master</div>
+          <div class="comp-desc">Forest-wide. Only this DC can modify the schema (object classes, attributes).</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🏛️</span>
+          <div class="comp-title">Domain Naming Master</div>
+          <div class="comp-desc">Forest-wide. Only this DC can add/remove domains from the forest.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔢</span>
+          <div class="comp-title">RID Master</div>
+          <div class="comp-desc">Domain-wide. Allocates RID blocks to DCs so SIDs are unique.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⏱️</span>
+          <div class="comp-title">PDC Emulator</div>
+          <div class="comp-desc">Domain-wide. Handles password changes, time sync, GPO editing.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔄</span>
+          <div class="comp-title">Infrastructure Master</div>
+          <div class="comp-desc">Domain-wide. Updates cross-domain references in multi-domain forests.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Why FSMO Roles Exist</div>
+        <p>Imagine two DCs both try to add a new domain at the same time. Without a single master, they'd conflict.</p>
+        <p>So AD designates <em>one</em> DC as the Domain Naming Master. Only that DC can add domains — eliminating conflicts.</p>
+      </div>
+    </section>
+
+    <!-- ==================== PARTITIONS ==================== -->
+    <section class="section" id="partitions">
+      <h2>🗄️ AD Partitions</h2>
+
+      <div class="section-intro">
+        <strong>AD data is split into partitions.</strong> Each partition has its own replication scope. Understanding partitions helps you understand where data lives and how it replicates.
+      </div>
+
+      <h3>Partition Diagram</h3>
+      <div class="tree"><span class="node-root">🗄️ AD PARTITIONS</span>
+│
+├── <span class="node-object">📘 Schema Partition</span>
+│   <span class="node-meta">Scope: Forest-wide</span>
+│   <span class="node-meta">Contains: Definitions of all object classes and attributes</span>
+│   <span class="node-meta">Replicates to: All DCs in every domain</span>
+│
+├── <span class="node-object">⚙️ Configuration Partition</span>
+│   <span class="node-meta">Scope: Forest-wide</span>
+│   <span class="node-meta">Contains: Sites, subnets, services, replication topology</span>
+│   <span class="node-meta">Replicates to: All DCs in every domain</span>
+│
+├── <span class="node-object">🏛️ Domain Partition</span>
+│   <span class="node-meta">Scope: One per domain</span>
+│   <span class="node-meta">Contains: Users, groups, computers, OUs (that domain only)</span>
+│   <span class="node-meta">Replicates to: All DCs in that domain only</span>
+│
+└── <span class="node-object">📱 Application Partitions</span>
+    <span class="node-meta">Scope: Custom (you choose)</span>
+    <span class="node-meta">Contains: App-specific data (DNS zones, etc.)</span>
+    <span class="node-meta">Replicates to: Only the DCs you specify</span></div>
+
+      <h3>Partition Component Cards</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">📘</span>
+          <div class="comp-title">Schema Partition</div>
+          <div class="comp-desc">The "dictionary" of AD. Defines what a User, Group, or Computer can have.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⚙️</span>
+          <div class="comp-title">Configuration Partition</div>
+          <div class="comp-desc">The "map" of AD. Holds site and replication configuration.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🏛️</span>
+          <div class="comp-title">Domain Partition</div>
+          <div class="comp-desc">The "content" — all users, groups, and computers in that domain.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📱</span>
+          <div class="comp-title">Application Partitions</div>
+          <div class="comp-desc">Custom storage for apps (DNS zones often stored here).</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Why Partitions Matter</div>
+        <p>When you add a new user:</p>
+        <ul>
+          <li>Only the <strong>Domain Partition</strong> changes (for that domain)</li>
+          <li>Only DCs in that domain replicate the change</li>
+        </ul>
+        <p>When you modify the schema (rare):</p>
+        <ul>
+          <li>The <strong>Schema Partition</strong> changes</li>
+          <li>Every DC in the entire forest replicates it</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== OBJECTS ==================== -->
+    <section class="section" id="objects">
+      <h2>🧩 Objects</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>Any individual entry in AD — user, group, computer, printer, OU, GPO.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>AD is object-oriented. Everything is an object with attributes and permissions.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Each object is defined by a class and has attributes.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p><code>CN=Alice,OU=Sales,DC=contoso,DC=com</code> — one object.</p>
+        </div>
+      </div>
+
+      <h3>Object Anatomy Diagram</h3>
+      <div class="tree"><span class="node-object">🧩 OBJECT: Alice Smith</span>
+│
+├── <span class="node-meta">CLASS: user</span>
+│
+├── <span class="node-meta">ATTRIBUTES:</span>
+│   ├── 🔤 sAMAccountName: alice
+│   ├── 📧 userPrincipalName: alice@contoso.com
+│   ├── 📛 displayName: Alice Smith
+│   ├── 📬 mail: alice.smith@contoso.com
+│   ├── 🔢 objectSid: S-1-5-21-...-1105
+│   ├── 👥 memberOf: Sales, VPN-Users
+│   └── ⚙️ userAccountControl: NORMAL_ACCOUNT
+│
+├── <span class="node-meta">PARENT:</span>
+│   └── 📂 OU: Sales, OU: Employees, DC=contoso, DC=com
+│
+└── <span class="node-meta">ACL:</span>
+    ├── Allow: Domain Admins → GenericAll
+    ├── Allow: HR-Team → GenericRead
+    └── Allow: Helpdesk → ForceChangePassword</div>
+
+      <h3>Object Classes</h3>
+      <table>
+        <tr><th>Object Class</th><th>Description</th><th>Example DN</th></tr>
+        <tr><td><code>user</code></td><td>A person or service account</td><td><code>CN=Alice,OU=Sales,DC=contoso,DC=com</code></td></tr>
+        <tr><td><code>group</code></td><td>Collection of users/computers</td><td><code>CN=SalesTeam,OU=Groups,DC=contoso,DC=com</code></td></tr>
+        <tr><td><code>computer</code></td><td>A domain-joined machine</td><td><code>CN=PC001,OU=Workstations,DC=contoso,DC=com</code></td></tr>
+        <tr><td><code>organizationalUnit</code></td><td>Container for organization</td><td><code>OU=Sales,DC=contoso,DC=com</code></td></tr>
+        <tr><td><code>groupPolicyContainer</code></td><td>GPO</td><td><code>CN={GUID},CN=Policies,CN=System,DC=contoso,DC=com</code></td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== USERS ==================== -->
+    <section class="section" id="users">
+      <h2>👤 Users</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>User objects represent people or services that need to authenticate. They hold credentials and attributes.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Users are the primary identity in AD.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Each user has a username, UPN, password hash, group memberships, and many attributes.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Alice has <code>sAMAccountName: alice</code>, <code>UPN: alice@contoso.com</code>, member of <code>Sales</code>.</p>
+        </div>
+      </div>
+
+      <h3>User Object Diagram</h3>
+      <div class="tree"><span class="node-object">👤 USER: alice</span>
+│
+├── <span class="node-meta">IDENTITY:</span>
+│   ├── 🔤 sAMAccountName: alice
+│   ├── 📧 userPrincipalName: alice@contoso.com
+│   ├── 🔢 objectSid: S-1-5-21-...-1105
+│   └── 📛 displayName: Alice Smith
+│
+├── <span class="node-meta">CREDENTIALS:</span>
+│   ├── 🔒 unicodePwd (NT hash + LM hash)
+│   ├── ⏰ pwdLastSet
+│   └── 📅 accountExpires
+│
+├── <span class="node-meta">MEMBERSHIPS:</span>
+│   ├── 👥 memberOf: CN=Sales,...
+│   ├── 👥 memberOf: CN=VPN-Users,...
+│   └── 👥 primaryGroupID: Domain Users
+│
+├── <span class="node-meta">POLICY FLAGS (userAccountControl):</span>
+│   ├── NORMAL_ACCOUNT (512)
+│   ├── DONT_EXPIRE_PASSWORD (65536)
+│   ├── ACCOUNTDISABLE (2)
+│   └── DONT_REQ_PREAUTH (4194304)
+│
+└── <span class="node-meta">OPTIONAL:</span>
+    ├── 🎯 servicePrincipalName (if service account)
+    ├── 📞 telephoneNumber
+    ├── 🏢 department
+    └── 📍 officeLocation</div>
+
+      <h3>Two Types of User Accounts</h3>
+      <div class="grid-2">
+        <div class="card info">
+          <h4>👤 Standard User</h4>
+          <p>Represents a person. Has interactive logon rights.</p>
+          <p><strong>Example:</strong> <code>alice</code> logs into her workstation.</p>
+        </div>
+        <div class="card purple">
+          <h4>⚙️ Service Account</h4>
+          <p>Represents a service or application. Often has SPNs.</p>
+          <p><strong>Example:</strong> <code>svc_sql</code> runs the SQL Server service.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== GROUPS ==================== -->
+    <section class="section" id="groups">
+      <h2>👥 Groups</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A container for users, computers, and other groups. Permissions are assigned to groups.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Managing permissions one user at a time doesn't scale.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Groups have scope (Domain Local, Global, Universal) and type (Security, Distribution).</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Give the <code>Sales</code> group access to a shared folder. Add Alice → she has access.</p>
+        </div>
+      </div>
+
+      <h3>Group Scope Diagram</h3>
+      <div class="tree"><span class="node-root">👥 GROUP SCOPES</span>
+│
+├── <span class="node-object">🌍 GLOBAL GROUP</span>
+│   ├── Contains: Users/computers from the same domain
+│   ├── Used in: Any domain in the forest
+│   └── Purpose: Organize users by role
+│
+├── <span class="node-object">🏛️ DOMAIN LOCAL GROUP</span>
+│   ├── Contains: Users, global groups, universal groups from any domain
+│   ├── Used in: Same domain only
+│   └── Purpose: Assign permissions to resources
+│
+└── <span class="node-object">🌐 UNIVERSAL GROUP</span>
+    ├── Contains: Users/groups from any domain in the forest
+    ├── Used in: Any domain in the forest
+    └── Purpose: Cross-domain role groups</div>
+
+      <h3>AGDLP Strategy — Best Practice Diagram</h3>
+      <div class="tree"><span class="node-object">👤 Account (Alice)</span>
+        ↓
+<span class="node-object">🌍 Global Group (Sales)</span>
+        ↓
+<span class="node-object">🏛️ Domain Local Group (Sales-Folder-Access)</span>
+        ↓
+<span class="node-object">📁 Permission (Read/Write on \\server\share)</span>
+
+<span class="node-meta">A = Accounts  G = Global  DL = Domain Local  P = Permissions</span></div>
+
+      <h3>Important Built-In Groups</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">👑</span>
+          <div class="comp-title">Domain Admins</div>
+          <div class="comp-desc">Full admin rights on every domain-joined machine.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🌲</span>
+          <div class="comp-title">Enterprise Admins</div>
+          <div class="comp-desc">Full admin rights on every domain in the forest.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📐</span>
+          <div class="comp-title">Schema Admins</div>
+          <div class="comp-desc">Can modify the AD schema.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">👤</span>
+          <div class="comp-title">Account Operators</div>
+          <div class="comp-desc">Can manage user accounts.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">💾</span>
+          <div class="comp-title">Backup Operators</div>
+          <div class="comp-desc">Can back up files regardless of ACLs.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== COMPUTERS ==================== -->
+    <section class="section" id="computers">
+      <h2>💻 Computers</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A computer object represents a domain-joined machine. It has its own account and password.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Machines need to authenticate, apply policies, and access resources.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>When you join a machine, an account is created. Its password rotates every 30 days.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>PC-001 has account <code>PC-001$</code> with its own password and SID.</p>
+        </div>
+      </div>
+
+      <h3>Computer Object Diagram</h3>
+      <div class="tree"><span class="node-object">💻 COMPUTER: PC-001$</span>
+│
+├── <span class="node-meta">IDENTITY:</span>
+│   ├── 🔤 sAMAccountName: PC-001$
+│   ├── 🔢 objectSid: S-1-5-21-...-1234
+│   ├── 📛 dNSHostName: PC-001.contoso.com
+│   └── 🌐 operatingSystem: Windows 11 Enterprise
+│
+├── <span class="node-meta">CREDENTIALS:</span>
+│   ├── 🔒 120-char random password
+│   └── ⏰ Password rotates every 30 days
+│
+├── <span class="node-meta">OWNER:</span>
+│   └── 👤 The user who joined the machine
+│
+├── <span class="node-meta">LOCATION:</span>
+│   └── 📂 CN=PC-001,OU=Workstations,DC=contoso,DC=com
+│
+└── <span class="node-meta">SPN (if server):</span>
+    └── 🎯 HOST/PC-001.contoso.com</div>
+
+      <div class="example-box">
+        <div class="title">📘 Why Computers Have Accounts</div>
+        <p>When PC-001 boots:</p>
+        <ol>
+          <li>It authenticates to the domain as <code>PC-001$</code></li>
+          <li>Downloads GPOs applied to its OU</li>
+          <li>Accesses network resources granted to it</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ==================== SERVICE ACCOUNTS ==================== -->
+    <section class="section" id="service-accounts">
+      <h2>⚙️ Service Accounts</h2>
+
+      <div class="section-intro">
+        <strong>Service accounts are user accounts used by services</strong> rather than people. They often have elevated privileges and never change their password.
+      </div>
+
+      <h3>Service Account Types Diagram</h3>
+      <div class="tree"><span class="node-root">⚙️ SERVICE ACCOUNT TYPES</span>
+│
+├── <span class="node-object">🔤 Traditional Service Account</span>
+│   ├── A regular user account
+│   ├── Manual password management
+│   ├── Common: svc_sql, svc_backup, svc_web
+│   └── Downside: passwords often never rotated
+│
+├── <span class="node-object">🖥️ Managed Service Account (MSA)</span>
+│   ├── Password managed by AD
+│   ├── Tied to one computer
+│   └── Downside: can't be used across multiple servers
+│
+├── <span class="node-object">🌐 Group Managed Service Account (gMSA)</span>
+│   ├── Password managed by AD
+│   ├── Can be used across multiple servers
+│   ├── 240-character auto-rotated password
+│   └── Best practice for modern services
+│
+└── <span class="node-object">🤖 Virtual Account</span>
+    ├── Managed by Windows
+    ├── No password at all
+    ├── Used by built-in services (NT SERVICE\*)
+    └── Not visible in AD</div>
+
+      <h3>Service Account Attributes</h3>
+      <table>
+        <tr><th>Attribute</th><th>Meaning</th></tr>
+        <tr><td><code>servicePrincipalName</code></td><td>Identifies the service (e.g., <code>MSSQLSvc/sql01:1433</code>)</td></tr>
+        <tr><td><code>userAccountControl</code></td><td>Flags like "password never expires"</td></tr>
+        <tr><td><code>msDS-ManagedPassword</code></td><td>For gMSAs — auto-rotated password blob</td></tr>
+        <tr><td><code>msDS-GroupMSAMembership</code></td><td>Who can retrieve the gMSA password</td></tr>
+      </table>
+
+      <div class="example-box">
+        <div class="title">📘 Why Service Accounts Matter</div>
+        <p>Service accounts often have:</p>
+        <ul>
+          <li>Passwords that never change</li>
+          <li>Elevated privileges (local admin, domain admin in some cases)</li>
+          <li>SPNs that let them be identified via LDAP</li>
+        </ul>
+        <p>Because they can't be easily disabled, they're attractive targets.</p>
+      </div>
+    </section>
+
+    <!-- ==================== SID ==================== -->
+    <section class="section" id="sid">
+      <h2>🔢 Security Identifiers (SIDs)</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A unique, immutable identifier for every security principal.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Names change; SIDs never do. Permissions use SIDs, not names.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Issued at object creation. Never reused.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p><code>S-1-5-21-3623811015-3361044348-30300820-1105</code></p>
+        </div>
+      </div>
+
+      <h3>SID Structure Diagram</h3>
+      <div class="tree"><span class="node-object">🔢 SID: S-1-5-21-3623811015-3361044348-30300820-1105</span>
+│
+├── <span class="node-meta">S</span>            <span class="node-meta">→ SID prefix (always S)</span>
+│
+├── <span class="node-meta">1</span>            <span class="node-meta">→ Revision number</span>
+│
+├── <span class="node-meta">5</span>            <span class="node-meta">→ Identifier Authority (5 = NT Authority)</span>
+│
+├── <span class="node-meta">21</span>           <span class="node-meta">→ NT Non-Volatile Authority</span>
+│
+├── <span class="node-meta">3623811015-3361044348-30300820</span>
+│                  <span class="node-meta">→ Domain identifier (3 sub-authorities)</span>
+│
+└── <span class="node-meta">1105</span>         <span class="node-meta">→ RID (Relative ID — unique within domain)</span></div>
+
+      <h3>Well-Known SIDs</h3>
+      <table>
+        <tr><th>SID</th><th>Account</th></tr>
+        <tr><td><code>S-1-5-18</code></td><td>Local SYSTEM</td></tr>
+        <tr><td><code>S-1-5-19</code></td><td>Local Service</td></tr>
+        <tr><td><code>S-1-5-20</code></td><td>Network Service</td></tr>
+        <tr><td><code>S-1-5-21-&lt;domain&gt;-500</code></td><td>Administrator</td></tr>
+        <tr><td><code>S-1-5-21-&lt;domain&gt;-501</code></td><td>Guest</td></tr>
+        <tr><td><code>S-1-5-21-&lt;domain&gt;-512</code></td><td>Domain Admins</td></tr>
+        <tr><td><code>S-1-5-21-&lt;domain&gt;-515</code></td><td>Domain Computers</td></tr>
+        <tr><td><code>S-1-5-21-&lt;domain&gt;-519</code></td><td>Enterprise Admins</td></tr>
+      </table>
+
+      <div class="example-box">
+        <div class="title">📘 Why SIDs Matter More Than Names</div>
+        <p>Alice changes her last name from Smith to Jones. Her <code>displayName</code> changes, but her SID stays the same.</p>
+        <p>All her file permissions, group memberships, and access rights <strong>continue to work</strong> — because they're tied to her SID, not her name.</p>
+      </div>
+    </section>
+
+    <!-- ==================== SCHEMA ==================== -->
+    <section class="section" id="schema">
+      <h2>📐 Schema</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>The blueprint of AD — defines every object class and every attribute.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>To store data consistently, AD needs to know what kinds of objects exist and what they can contain.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Forest-wide. Changing it requires the Schema Master FSMO role.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>The <code>User</code> class has attributes like <code>sAMAccountName</code>, <code>mail</code>, <code>memberOf</code>.</p>
+        </div>
+      </div>
+
+      <h3>Schema Structure Diagram</h3>
+      <div class="tree"><span class="node-root">📐 SCHEMA COMPONENTS</span>
+│
+├── <span class="node-object">🧩 CLASSES (what can exist)</span>
+│   ├── user
+│   ├── group
+│   ├── computer
+│   ├── organizationalUnit
+│   └── groupPolicyContainer
+│
+├── <span class="node-object">📊 ATTRIBUTES (what can be stored)</span>
+│   ├── sAMAccountName (string)
+│   ├── objectSid (binary)
+│   ├── memberOf (DN)
+│   ├── mail (string)
+│   └── userAccountControl (integer)
+│
+└── <span class="node-object">🔗 RELATIONSHIPS</span>
+    ├── user inherits from organizationalPerson
+    ├── group inherits from top
+    └── Each class has required + optional attributes</div>
+
+      <div class="example-box">
+        <div class="title">📘 Schema Extension in Action</div>
+        <p>When you install Microsoft Exchange, it <strong>extends the schema</strong> — adding hundreds of new attributes.</p>
+        <p>After the extension, User objects can have Exchange-specific attributes like <code>msExchMailboxGuid</code>.</p>
+        <p>Since the schema is forest-wide, the extension applies everywhere.</p>
+      </div>
+    </section>
+
+    <!-- ==================== ACL ==================== -->
+    <section class="section" id="acl">
+      <h2>📋 Access Control Lists (ACLs)</h2>
+
+      <div class="section-intro">
+        <strong>An ACL is a list of rules</strong> that defines who can do what on an object.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A set of Access Control Entries (ACEs). Each ACE says "principal X can do action Y."</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>AD needs to enforce granular permissions.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>When you access an object, Windows evaluates the ACL.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>ACL on "Sales OU": Admins can modify, Helpdesk can create users, everyone can read.</p>
+        </div>
+      </div>
+
+      <h3>ACL Anatomy Diagram</h3>
+      <div class="tree"><span class="node-object">📋 ACL on object: CN=Alice,OU=Sales</span>
+│
+├── <span class="node-meta">ACE #1:</span>
+│   ├── Principal: CONTOSO\Domain Admins
+│   ├── Type: Allow
+│   ├── Permission: GenericAll
+│   └── Inherited: No (explicit)
+│
+├── <span class="node-meta">ACE #2:</span>
+│   ├── Principal: CONTOSO\HR-Team
+│   ├── Type: Allow
+│   ├── Permission: GenericRead
+│   └── Inherited: Yes (from Employees OU)
+│
+├── <span class="node-meta">ACE #3:</span>
+│   ├── Principal: CONTOSO\Helpdesk
+│   ├── Type: Allow
+│   ├── Permission: ForceChangePassword (ExtendedRight)
+│   └── Inherited: Yes
+│
+└── <span class="node-meta">ACE #4:</span>
+    ├── Principal: CONTOSO\Bob
+    ├── Type: Deny
+    ├── Permission: WriteProperty (mail)
+    └── Inherited: No (explicit)</div>
+
+      <h3>Common AD Permissions</h3>
+      <table>
+        <tr><th>Permission</th><th>Meaning</th></tr>
+        <tr><td><strong>GenericRead</strong></td><td>Read most properties</td></tr>
+        <tr><td><strong>GenericWrite</strong></td><td>Modify most properties</td></tr>
+        <tr><td><strong>GenericAll</strong></td><td>Full control — equivalent to ownership</td></tr>
+        <tr><td><strong>WriteDACL</strong></td><td>Change the ACL itself</td></tr>
+        <tr><td><strong>WriteOwner</strong></td><td>Change the owner of the object</td></tr>
+        <tr><td><strong>ForceChangePassword</strong></td><td>Reset a password without knowing the old one</td></tr>
+        <tr><td><strong>ExtendedRight: Replicating Directory Changes</strong></td><td>Replicate AD data (used for DCSync)</td></tr>
+        <tr><td><strong>ExtendedRight: User-Force-Change-Password</strong></td><td>Same as ForceChangePassword</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== ACL TYPES ==================== -->
+    <section class="section" id="acl-types">
+      <h2>🔐 DACL vs SACL</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">DACL</span>
+          <p><strong>Discretionary ACL.</strong> Defines who is <em>allowed or denied</em> access.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">SACL</span>
+          <p><strong>System ACL.</strong> Defines what is <em>audited</em>.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">DACL Example</span>
+          <p>"Allow Alice to read this file."</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">SACL Example</span>
+          <p>"Log every time someone tries to read this file."</p>
+        </div>
+      </div>
+
+      <h3>DACL vs SACL Diagram</h3>
+      <div class="tree"><span class="node-object">📋 OBJECT: SecretFile.txt</span>
+│
+├── <span class="node-object">🔐 DACL (Access Control)</span>
+│   ├── Allow: Alice → Read
+│   ├── Allow: Admins → Full Control
+│   └── Deny: Bob → Read
+│
+└── <span class="node-object">📊 SACL (Auditing)</span>
+    ├── Success: Read (who successfully reads)
+    ├── Failure: Read (who fails to read)
+    └── Success: Write (who successfully writes)</div>
+
+      <div class="example-box">
+        <div class="title">📘 Both Work Together</div>
+        <p>A file might have:</p>
+        <ul>
+          <li><strong>DACL:</strong> Alice can read; Bob cannot</li>
+          <li><strong>SACL:</strong> Every failed read attempt is logged</li>
+        </ul>
+        <p>DACL decides access. SACL records what happened.</p>
+      </div>
+    </section>
+
+    <!-- ==================== INHERITANCE ==================== -->
+    <section class="section" id="inheritance">
+      <h2>🌳 Inheritance</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>Child objects automatically receive permissions from their parent container.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Without inheritance, you'd set permissions on every object individually.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>By default, ACLs on an OU propagate to all objects within it.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>"Helpdesk can reset passwords" set on Employees OU → applies to all users inside.</p>
+        </div>
+      </div>
+
+      <h3>Inheritance Flow Diagram</h3>
+      <div class="tree"><span class="node-ou">📂 OU: Employees</span>
+<span class="node-meta">  ACL: Helpdesk → ForceChangePassword</span>
+│
+├── <span class="node-object">👤 alice</span>   <span class="node-meta">← inherits Helpdesk permission</span>
+├── <span class="node-object">👤 bob</span>     <span class="node-meta">← inherits Helpdesk permission</span>
+└── <span class="node-ou">📂 OU: Sales</span>
+    <span class="node-meta">  (inherits Employees OU permission too)</span>
+    │
+    ├── <span class="node-object">👤 carol</span>  <span class="node-meta">← inherits from both OUs</span>
+    └── <span class="node-object">👤 dave</span>   <span class="node-meta">← inherits from both OUs</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Why Inheritance Matters</div>
+        <p>An organization has 5,000 employees across 20 OUs.</p>
+        <p>Instead of setting "Helpdesk can reset passwords" 5,000 times, you set it once on the parent OU. All child users inherit it.</p>
+      </div>
+    </section>
+
+    <!-- ==================== TOKEN ==================== -->
+    <section class="section" id="token">
+      <h2>🎫 Access Tokens</h2>
+
+      <div class="section-intro">
+        <strong>When you log in, Windows creates an access token.</strong> That token contains your identity, group memberships, and privileges. Every action you take is checked against this token.
+      </div>
+
+      <h3>Access Token Structure Diagram</h3>
+      <div class="tree"><span class="node-root">🎫 ACCESS TOKEN (created at logon)</span>
+│
+├── <span class="node-object">👤 User SID</span>
+│   <span class="node-meta">→ S-1-5-21-...-1105</span>
+│
+├── <span class="node-object">👥 Group SIDs</span>
+│   <span class="node-meta">→ Sales, VPN-Users, Domain Users</span>
+│
+├── <span class="node-object">⚔️ Privileges</span>
+│   <span class="node-meta">→ SeShutdownPrivilege, SeChangeNotifyPrivilege</span>
+│
+├── <span class="node-object">🔓 Integrity Level</span>
+│   <span class="node-meta">→ Medium (or High if elevated)</span>
+│
+└── <span class="node-object">⏰ Logon Session</span>
+    <span class="node-meta">→ Unique LUID for this session</span></div>
+
+      <h3>Primary vs Impersonation Tokens</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">🎫</span>
+          <div class="comp-title">Primary Token</div>
+          <div class="comp-desc">Assigned to a process at creation. Defines its default security context.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🎭</span>
+          <div class="comp-title">Impersonation Token</div>
+          <div class="comp-desc">Assigned to a thread. Allows a thread to run as another user temporarily.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Token in Action</div>
+        <p>You log in as Alice.</p>
+        <ul>
+          <li>Your token contains Alice's SID + all her group SIDs</li>
+          <li>When you open a file, Windows checks the file's ACL against your token</li>
+          <li>If your token has a matching Allow ACE → access granted</li>
+          <li>If it has a matching Deny ACE → access denied</li>
+        </ul>
+        <p>Your token is the single point of identity for everything you do.</p>
+      </div>
+    </section>
+
+    <!-- ==================== AUTH BASICS ==================== -->
+    <section class="section" id="auth-basics">
+      <h2>🔑 Authentication Basics</h2>
+
+      <div class="section-intro">
+        <strong>Authentication = proving who you are.</strong> In AD, this is done via Kerberos (modern) or NTLM (legacy).
+      </div>
+
+      <div class="flow">
+        <span class="step">You provide credentials</span>
+        <span class="arrow">→</span>
+        <span class="step">DC verifies them</span>
+        <span class="arrow">→</span>
+        <span class="step">DC issues a ticket</span>
+        <span class="arrow">→</span>
+        <span class="step">You use the ticket</span>
+      </div>
+
+      <h3>Authentication vs Authorization</h3>
+      <div class="grid-2">
+        <div class="card info">
+          <h4>🔑 Authentication</h4>
+          <p><strong>Question:</strong> Who are you?</p>
+          <p><strong>Example:</strong> Login with username + password.</p>
+          <p><strong>Handled by:</strong> DC (Kerberos/NTLM).</p>
+        </div>
+        <div class="card purple">
+          <h4>🔐 Authorization</h4>
+          <p><strong>Question:</strong> What can you do?</p>
+          <p><strong>Example:</strong> Can you read this file?</p>
+          <p><strong>Handled by:</strong> ACLs / access tokens.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== LOGON PROCESS ==================== -->
+    <section class="section" id="logon-process">
+      <h2>🚪 The Logon Process (Step-by-Step)</h2>
+
+      <div class="section-intro">
+        <strong>What actually happens when you log in?</strong> Let's walk through it as a timeline.
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="timeline-dot">1</div>
+          <div class="timeline-content">
+            <div class="tl-title">You Type Credentials</div>
+            <div class="tl-desc">You enter username and password on a domain-joined machine.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">2</div>
+          <div class="timeline-content">
+            <div class="tl-title">Find a DC (DNS + Sites)</div>
+            <div class="tl-desc">Workstation queries DNS for <code>_kerberos._tcp.contoso.com</code>. AD returns the closest DC based on your site.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">3</div>
+          <div class="timeline-content">
+            <div class="tl-title">AS-REQ Sent</div>
+            <div class="tl-desc">Workstation sends an Authentication Service Request (AS-REQ) to the DC. It contains the username and a timestamp encrypted with the password hash.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">4</div>
+          <div class="timeline-content">
+            <div class="tl-title">DC Verifies Credentials</div>
+            <div class="tl-desc">The DC looks up your account, retrieves your password hash, and decrypts the timestamp. If it matches, credentials are valid.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">5</div>
+          <div class="timeline-content">
+            <div class="tl-title">AS-REP Returned with TGT</div>
+            <div class="tl-desc">DC sends back an Authentication Service Reply (AS-REP) containing a TGT (Ticket Granting Ticket) and a session key.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">6</div>
+          <div class="timeline-content">
+            <div class="tl-title">TGT Cached in Memory</div>
+            <div class="tl-desc">Workstation caches the TGT in LSASS memory. It will be used to request service tickets.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">7</div>
+          <div class="timeline-content">
+            <div class="tl-title">Access Token Created</div>
+            <div class="tl-desc">Windows creates your access token: your SID, group SIDs, privileges, integrity level.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">8</div>
+          <div class="timeline-content">
+            <div class="tl-title">GPOs Applied</div>
+            <div class="tl-desc">Workstation downloads GPOs from SYSVOL applied to your user and computer OUs.</div>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-dot">9</div>
+          <div class="timeline-content">
+            <div class="tl-title">Desktop Loads</div>
+            <div class="tl-desc">You're now logged in. TGT in memory, token in LSASS, GPOs applied.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Behind the Scenes — Why So Complex?</div>
+        <p>Every step exists for a reason:</p>
+        <ul>
+          <li><strong>DNS + Sites:</strong> So you don't authenticate to a DC on the other side of the world.</li>
+          <li><strong>Timestamp encryption:</strong> So your password never crosses the network.</li>
+          <li><strong>TGT:</strong> So you authenticate once, not for every resource.</li>
+          <li><strong>Access token:</strong> So each action checks against your identity, not a global table.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== KERBEROS ==================== -->
+    <section class="section" id="kerberos">
+      <h2>🎟️ Kerberos</h2>
+
+      <div class="section-intro">
+        <strong>Kerberos is the default authentication protocol.</strong> It uses tickets instead of passwords, so credentials never cross the network.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A ticket-based authentication protocol using symmetric-key cryptography.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Passwords should never cross the network. Kerberos solves this.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Three heads: Client, KDC, Service. Tickets prove identity.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>You log in — you get a TGT. You access a file share — you get a TGS for that share.</p>
+        </div>
+      </div>
+
+      <h3>Kerberos Components Diagram</h3>
+      <div class="tree"><span class="node-root">🎟️ KERBEROS COMPONENTS</span>
+│
+├── <span class="node-object">👤 CLIENT</span>
+│   <span class="node-meta">→ You (or a service acting as you)</span>
+│
+├── <span class="node-object">🏛️ KDC (Key Distribution Center)</span>
+│   <span class="node-meta">→ Runs on every Domain Controller</span>
+│   ├── AS (Authentication Service)
+│   └── TGS (Ticket Granting Service)
+│
+└── <span class="node-object">🖥️ SERVICE</span>
+    <span class="node-meta">→ The resource you want to access (file share, SQL, web app)</span></div>
+
+      <h3>Kerberos Authentication Flow Diagram</h3>
+      <div class="tree"><span class="node-meta">Step 1: You authenticate to the KDC (once)</span>
+
+  👤 Client ──── AS-REQ ────→ 🏛️ KDC
+              ←─── AS-REP ────
+                 (contains TGT)
+
+<span class="node-meta">Step 2: You request a service ticket</span>
+
+  👤 Client ──── TGS-REQ ──→ 🏛️ KDC
+              (uses TGT)
+              ←─── TGS-REP ──
+                 (contains TGS for the service)
+
+<span class="node-meta">Step 3: You access the service</span>
+
+  👤 Client ──── AP-REQ ───→ 🖥️ Service
+              (uses TGS)
+              ←─── AP-REP ──
+                 (access granted)</div>
+
+      <h3>Ticket Types</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">🎫</span>
+          <div class="comp-title">TGT</div>
+          <div class="comp-desc">Ticket Granting Ticket. Proves you authenticated. Used to request service tickets. Valid ~10 hours.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🎟️</span>
+          <div class="comp-title">TGS</div>
+          <div class="comp-desc">Ticket Granting Service. Proves you can access a specific service. Used to access that service.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Kerberos Hotel Analogy</div>
+        <p>Think of Kerberos like a hotel:</p>
+        <ul>
+          <li><strong>Check-in desk (KDC):</strong> You show ID once, get a room key (TGT).</li>
+          <li><strong>Gym access (Service Ticket):</strong> To enter the gym, use your room key to get a gym pass (TGS).</li>
+          <li><strong>Gym door (Service):</strong> The gym reads your pass and lets you in — without knowing your ID or password.</li>
+        </ul>
+        <p>Your password is never told to the gym, the restaurant, or the pool. Only check-in verified it.</p>
+      </div>
+    </section>
+
+    <!-- ==================== NTLM ==================== -->
+    <section class="section" id="ntlm">
+      <h2>🔒 NTLM</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>NT LAN Manager — the older Windows authentication protocol using challenge/response.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Still used when Kerberos isn't available (by IP, non-domain, legacy apps).</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Server sends a challenge; client responds with a hash of challenge + password hash.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Accessing a workgroup share → NTLM used.</p>
+        </div>
+      </div>
+
+      <h3>NTLM Authentication Flow Diagram</h3>
+      <div class="tree"><span class="node-meta">Step 1: Client sends username</span>
+
+  👤 Client ─── Type 1 (Negotiate) ──→ 🖥️ Server
+
+<span class="node-meta">Step 2: Server sends challenge</span>
+
+  👤 Client ←── Type 2 (Challenge) ──  🖥️ Server
+
+<span class="node-meta">Step 3: Client responds with encrypted challenge</span>
+
+  👤 Client ─── Type 3 (Authenticate) ──→ 🖥️ Server
+              (HMAC-MD5(password_hash, challenge))
+
+<span class="node-meta">Step 4: Server verifies (or forwards to DC)</span>
+
+  🖥️ Server ── verifies locally or forwards to DC ──→ ✅</div>
+
+      <h3>NTLM vs Kerberos Comparison</h3>
+      <table>
+        <tr><th>Aspect</th><th>NTLM</th><th>Kerberos</th></tr>
+        <tr><td>Password over network</td><td>Never (uses hash)</td><td>Never</td></tr>
+        <tr><td>Mutual auth</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Delegation support</td><td>Limited</td><td>Yes</td></tr>
+        <tr><td>Works by IP</td><td>Yes</td><td>No (needs hostname)</td></tr>
+        <tr><td>Works without DC</td><td>Yes (cached creds)</td><td>No (needs KDC)</td></tr>
+        <tr><td>Modern preference</td><td>Fallback</td><td>Default</td></tr>
+      </table>
+
+      <div class="callout warn">
+        <strong>Why modern environments prefer Kerberos:</strong> NTLM has known weaknesses. Many organizations now disable NTLM entirely.
+      </div>
+    </section>
+
+    <!-- ==================== LDAP ==================== -->
+    <section class="section" id="ldap">
+      <h2>📖 LDAP</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>Lightweight Directory Access Protocol — the language used to query and modify AD.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Applications need a standard way to search, read, and write directory data.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>You send LDAP queries to a DC. The DC responds with matching objects.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Search for <code>(&(objectClass=user)(department=Sales))</code> → returns all Sales users.</p>
+        </div>
+      </div>
+
+      <h3>LDAP Distinguished Name (DN) Diagram</h3>
+      <div class="tree"><span class="node-object">📖 DN: CN=Alice Smith,OU=Sales,OU=Employees,DC=contoso,DC=com</span>
+│
+├── <span class="node-meta">CN=Alice Smith</span>    <span class="node-meta">→ Common Name (the object)</span>
+├── <span class="node-meta">OU=Sales</span>           <span class="node-meta">→ Parent OU</span>
+├── <span class="node-meta">OU=Employees</span>       <span class="node-meta">→ Grandparent OU</span>
+├── <span class="node-meta">DC=contoso</span>         <span class="node-meta">→ Domain component</span>
+└── <span class="node-meta">DC=com</span>             <span class="node-meta">→ Top-level domain</span>
+
+<span class="node-meta">Read right-to-left: com → contoso → Employees → Sales → Alice Smith</span></div>
+
+      <h3>LDAP Query Components</h3>
+      <table>
+        <tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td><code>=</code></td><td>Equals</td><td><code>(cn=Alice)</code></td></tr>
+        <tr><td><code>&</code></td><td>AND</td><td><code>(&(dept=Sales)(title=Manager))</code></td></tr>
+        <tr><td><code>|</code></td><td>OR</td><td><code>(|(dept=Sales)(dept=Marketing))</code></td></tr>
+        <tr><td><code>!</code></td><td>NOT</td><td><code>(!(disabled=TRUE))</code></td></tr>
+        <tr><td><code>*</code></td><td>Wildcard</td><td><code>(cn=A*)</code></td></tr>
+      </table>
+
+      <div class="example-box">
+        <div class="title">📘 Real LDAP Query Example</div>
+        <p>Find all users in Sales whose accounts are enabled:</p>
+        <div class="code-block">
+          <div class="code-header"><span>LDAP</span><button onclick="copyCode(this)">Copy</button></div>
+          <pre>(&
+    (objectClass=user)
+    (department=Sales)
+    (!(userAccountControl:1.2.840.113556.1.4.803:=2))
+)
+
+<span class="comment"># Read as: users AND department=Sales AND NOT disabled</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TRUSTS ==================== -->
+    <section class="section" id="trusts">
+      <h2>🔗 Trusts</h2>
+
+      <div class="section-intro">
+        <strong>A trust is a relationship between two domains or forests</strong> that lets users in one access resources in the other.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A logical link allowing authentication across domains/forests.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Companies merge, partner, or have multiple domains. Trusts avoid duplicate accounts.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Trusts are directional (one-way or two-way) and transitive (or not).</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Users in <code>emea.contoso.com</code> access file shares in <code>contoso.com</code> — via automatic parent-child trust.</p>
+        </div>
+      </div>
+
+      <h3>Trust Types Diagram</h3>
+      <div class="tree"><span class="node-root">🔗 TRUST TYPES</span>
+│
+├── <span class="node-object">🌲 Parent-Child (Automatic)</span>
+│   <span class="node-meta">Direction: Two-way</span>
+│   <span class="node-meta">Transitive: Yes</span>
+│   <span class="node-meta">Example: contoso.com ⟷ emea.contoso.com</span>
+│
+├── <span class="node-object">🌳 Tree-Root (Automatic)</span>
+│   <span class="node-meta">Direction: Two-way</span>
+│   <span class="node-meta">Transitive: Yes</span>
+│   <span class="node-meta">Example: Between trees in the same forest</span>
+│
+├── <span class="node-object">🌐 External (Manual)</span>
+│   <span class="node-meta">Direction: One or two-way</span>
+│   <span class="node-meta">Transitive: No</span>
+│   <span class="node-meta">Example: contoso.com ⟷ partner.com</span>
+│
+├── <span class="node-object">🌍 Forest (Manual)</span>
+│   <span class="node-meta">Direction: One or two-way</span>
+│   <span class="node-meta">Transitive: Yes</span>
+│   <span class="node-meta">Example: contoso.com forest ⟷ fabrikam.com forest</span>
+│
+└── <span class="node-object">🎭 Realm (Manual)</span>
+    <span class="node-meta">Direction: One or two-way</span>
+    <span class="node-meta">Transitive: No</span>
+    <span class="node-meta">Example: Windows domain ⟷ Linux Kerberos realm</span></div>
+
+      <h3>Trust Direction Diagram</h3>
+      <div class="tree"><span class="node-meta">One-way trust (contoso → fabrikam):</span>
+
+  🏛️ contoso.com  ─────→  🏛️ fabrikam.com
+  <span class="node-meta">(users here can access resources there)</span>
+
+<span class="node-meta">Two-way trust (contoso ⟷ fabrikam):</span>
+
+  🏛️ contoso.com  ⟷  🏛️ fabrikam.com
+  <span class="node-meta">(both directions — users can access each other's resources)</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Trust Example</div>
+        <p><strong>Contoso</strong> acquires <strong>Fabrikam</strong>. Both have their own forests.</p>
+        <p>They create a two-way forest trust.</p>
+        <p>Result: Contoso users can access Fabrikam resources, and vice versa — but <em>only if permissions are granted</em>.</p>
+      </div>
+    </section>
+
+    <!-- ==================== DELEGATION ==================== -->
+    <section class="section" id="delegation">
+      <h2>🎫 Delegation</h2>
+
+      <div class="section-intro">
+        <strong>Delegation lets a service act on behalf of a user.</strong> Instead of the user directly accessing backends, a frontend service does it for them.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A Kerberos feature allowing a service to impersonate a user when accessing another service.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Multi-tier apps need to pass user identity from front-end to back-end.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>Configured on the service account or computer account. Three types.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>A web app (frontend) queries SQL (backend) as the logged-in user.</p>
+        </div>
+      </div>
+
+      <h3>Three Delegation Types Diagram</h3>
+      <div class="tree"><span class="node-root">🎫 DELEGATION TYPES</span>
+│
+├── <span class="node-object">⚠️ Unconstrained Delegation</span>
+│   ├── Service can impersonate user to ANY service
+│   ├── Caches user's TGT in memory
+│   ├── Historically dangerous
+│   └── Rarely used in modern environments
+│
+├── <span class="node-object">✅ Constrained Delegation</span>
+│   ├── Service can impersonate user to SPECIFIC services
+│   ├── Configured via msDS-AllowedToDelegateTo
+│   ├── Safer — limits scope
+│   └── Common in multi-tier apps
+│
+└── <span class="node-object">🛡️ Resource-Based Constrained Delegation (RBCD)</span>
+    ├── TARGET resource decides who can delegate to it
+    ├── Configured via msDS-AllowedToActOnBehalfOfOtherIdentity
+    ├── Most modern and granular
+    └── Best practice</div>
+
+      <h3>Delegation in Action Diagram</h3>
+      <div class="tree"><span class="node-meta">Scenario: Alice accesses a web app that reads from SQL</span>
+
+  👤 Alice  ─────→  🌐 Web App  ─────→  🗄️ SQL Server
+                   (frontend)             (backend)
+
+<span class="node-meta">Without delegation:</span>
+  Web App can only access SQL as itself → SQL doesn't know it's Alice.
+
+<span class="node-meta">With delegation:</span>
+  Web App impersonates Alice → SQL sees Alice's identity.
+
+<span class="node-meta">Result: SQL applies Alice's permissions, not the web app's.</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Real-World Delegation Example</div>
+        <p><strong>Scenario:</strong> A web app at <code>web.contoso.com</code> needs to read data from <code>sql.contoso.com</code> as the logged-in user.</p>
+        <ul>
+          <li><strong>Unconstrained:</strong> Web server can impersonate Alice to any service. Dangerous if compromised.</li>
+          <li><strong>Constrained:</strong> Web server can only impersonate Alice to <code>sql.contoso.com</code>. Safer.</li>
+          <li><strong>RBCD:</strong> The SQL server trusts <code>web.contoso.com</code> for delegation. Most granular.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== GPO ==================== -->
+    <section class="section" id="gpo">
+      <h2>📝 Group Policy Objects (GPOs)</h2>
+
+      <div class="section-intro">
+        <strong>GPOs are the central way to configure settings across the domain.</strong> Write once, apply everywhere.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A collection of settings defining how users and computers should be configured.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Managing 1,000 machines individually is impossible.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>You link a GPO to a Site, Domain, or OU. The settings apply under that scope.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>A GPO on the Workstations OU enforces screen lock after 5 minutes.</p>
+        </div>
+      </div>
+
+      <h3>GPO Precedence Diagram</h3>
+      <div class="tree"><span class="node-root">📝 GPO PRECEDENCE (last write wins)</span>
+│
+├── 1. <span class="node-object">Local Policy</span>
+│       <span class="node-meta">(applies to the machine only)</span>
+│
+├── 2. <span class="node-object">Site-linked GPOs</span>
+│       <span class="node-meta">(applies to all computers in the site)</span>
+│
+├── 3. <span class="node-object">Domain-linked GPOs</span>
+│       <span class="node-meta">(applies to the whole domain)</span>
+│
+├── 4. <span class="node-object">OU-linked GPOs (Parent)</span>
+│       <span class="node-meta">(applies to that OU and its children)</span>
+│
+└── 5. <span class="node-object">OU-linked GPOs (Child)</span>
+        <span class="node-meta">(highest priority — applies last)</span>
+
+<span class="node-meta">Lower in the list = higher priority</span></div>
+
+      <h3>What GPOs Can Configure</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">🔒</span>
+          <div class="comp-title">Security</div>
+          <div class="comp-desc">Password policy, lockout, user rights, audit policy.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🖥️</span>
+          <div class="comp-title">Desktop</div>
+          <div class="comp-desc">Wallpaper, Start menu, screensaver, taskbar.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📦</span>
+          <div class="comp-title">Software</div>
+          <div class="comp-desc">Install, update, or remove applications.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🌐</span>
+          <div class="comp-title">Network</div>
+          <div class="comp-desc">Firewall, proxy, mapped drives, VPN.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">📜</span>
+          <div class="comp-title">Scripts</div>
+          <div class="comp-desc">Login, logout, startup, shutdown scripts.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔐</span>
+          <div class="comp-title">Certificates</div>
+          <div class="comp-desc">Auto-enrollment, trusted roots.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 GPO in Action</div>
+        <p>Contoso wants:</p>
+        <ul>
+          <li>All users: password minimum length of 12</li>
+          <li>IT staff: no USB drives</li>
+          <li>Kiosk machines: auto-login</li>
+        </ul>
+        <p>Solution: three GPOs — one on the domain, one on the IT OU, one on the Kiosk OU.</p>
+      </div>
+    </section>
+
+    <!-- ==================== ADCS ==================== -->
+    <section class="section" id="adcs">
+      <h2>📜 ADCS (Active Directory Certificate Services)</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>Microsoft's PKI. Issues digital certificates for authentication, encryption, and signing.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Used everywhere — VPN, Wi-Fi (802.1X), smart cards, code signing, TLS.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>A CA is deployed. It issues certificates based on templates.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>A user requests a VPN certificate. The CA issues it based on the "VPN User" template.</p>
+        </div>
+      </div>
+
+      <h3>ADCS Hierarchy Diagram</h3>
+      <div class="tree"><span class="node-root">📜 ADCS PKI HIERARCHY</span>
+│
+├── <span class="node-object">🌳 Root CA (Offline)</span>
+│   <span class="node-meta">→ The trust anchor. Rarely online.</span>
+│
+├── <span class="node-object">🏛️ Issuing CA (Online)</span>
+│   <span class="node-meta">→ Issues certificates to users/computers</span>
+│   │
+│   ├── <span class="node-meta">Certificate Templates:</span>
+│   │   ├── User
+│   │   ├── Computer
+│   │   ├── Web Server
+│   │   ├── VPN User
+│   │   └── Smart Card Logon
+│   │
+│   └── <span class="node-meta">Enrollment Methods:</span>
+│       ├── Auto-enrollment (via GPO)
+│       ├── Manual (via web interface)
+│       └── API (via certreq, certipy)
+│
+└── <span class="node-object">📋 CRL (Certificate Revocation List)</span>
+    <span class="node-meta">→ List of revoked certificates</span></div>
+
+      <h3>Certificate Template Components</h3>
+      <div class="components">
+        <div class="component">
+          <span class="comp-icon">👤</span>
+          <div class="comp-title">Subject</div>
+          <div class="comp-desc">Who the certificate is for (user or computer).</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🎯</span>
+          <div class="comp-title">Purpose (EKU)</div>
+          <div class="comp-desc">What the certificate can be used for (client auth, server auth).</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">⏰</span>
+          <div class="comp-title">Validity Period</div>
+          <div class="comp-desc">How long the certificate is valid.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">👥</span>
+          <div class="comp-title">Enrollment Permissions</div>
+          <div class="comp-desc">Who can request certificates from this template.</div>
+        </div>
+        <div class="component">
+          <span class="comp-icon">🔑</span>
+          <div class="comp-title">Key Usage</div>
+          <div class="comp-desc">What cryptographic operations the key can perform.</div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="title">📘 Real-World ADCS Example</div>
+        <p>Contoso deploys ADCS for:</p>
+        <ul>
+          <li><strong>Wi-Fi (802.1X):</strong> Users authenticate to corporate Wi-Fi with certificates.</li>
+          <li><strong>VPN:</strong> Remote workers authenticate with certificates.</li>
+          <li><strong>Internal HTTPS:</strong> Web servers get certificates from the internal CA.</li>
+          <li><strong>Smart Cards:</strong> High-security accounts use certificate-based logon.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== DNS ==================== -->
+    <section class="section" id="dns">
+      <h2>🌐 DNS in AD</h2>
+
+      <div class="section-intro">
+        <strong>AD depends on DNS.</strong> Every AD operation starts with a DNS lookup.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>AD-integrated DNS — a DNS zone stored in AD that replicates and is secured by AD permissions.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Clients must find DCs, Global Catalogs, and Kerberos services.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>SRV records tell clients where the DCs are.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Alice's login queries <code>_kerberos._tcp.contoso.com</code> to find the nearest KDC.</p>
+        </div>
+      </div>
+
+      <h3>Key AD DNS Records Diagram</h3>
+      <div class="tree"><span class="node-root">🌐 AD DNS SRV RECORDS</span>
+│
+├── <span class="node-object">_ldap._tcp.dc._msdcs.contoso.com</span>
+│   <span class="node-meta">→ Locate Domain Controllers (LDAP)</span>
+│
+├── <span class="node-object">_kerberos._tcp.dc._msdcs.contoso.com</span>
+│   <span class="node-meta">→ Locate Kerberos KDCs</span>
+│
+├── <span class="node-object">_gc._tcp.contoso.com</span>
+│   <span class="node-meta">→ Locate Global Catalog servers</span>
+│
+├── <span class="node-object">_kpasswd._tcp.contoso.com</span>
+│   <span class="node-meta">→ Locate Kerberos password servers</span>
+│
+└── <span class="node-object">_ldap._tcp.&lt;site&gt;._sites.dc._msdcs.contoso.com</span>
+    <span class="node-meta">→ Locate DCs in a specific site</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Why AD Needs DNS</div>
+        <p>Imagine logging in and the workstation doesn't know which DC to talk to → login fails.</p>
+        <p>AD relies on DNS to answer "where is the DC?" and "which DC is closest?" — every login, every resource access, every replication.</p>
+      </div>
+    </section>
+
+    <!-- ==================== REPLICATION ==================== -->
+    <section class="section" id="replication">
+      <h2>🔄 AD Replication</h2>
+
+      <div class="section-intro">
+        <strong>AD uses multi-master replication.</strong> Every DC has a full copy of the database, and changes on one DC propagate to all others.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>The process by which DCs sync directory data with each other.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Users can log in at any DC. Changes made on one must appear on all others.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>DCs periodically replicate using RPC over IP (or SMTP in specific cases).</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Alice resets her password on DC01. Within seconds, all other DCs know.</p>
+        </div>
+      </div>
+
+      <h3>Replication Components Diagram</h3>
+      <div class="tree"><span class="node-root">🔄 REPLICATION COMPONENTS</span>
+│
+├── <span class="node-object">📊 Partition</span>
+│   <span class="node-meta">→ Section of AD (Schema, Config, Domain)</span>
+│
+├── <span class="node-object">🔢 USN (Update Sequence Number)</span>
+│   <span class="node-meta">→ Counter tracking changes on each DC</span>
+│
+├── <span class="node-object">📏 High-Water Mark</span>
+│   <span class="node-meta">→ Highest USN seen from a partner</span>
+│
+├── <span class="node-object">⏱️ Intra-Site Replication</span>
+│   <span class="node-meta">→ Every 15 seconds (same site)</span>
+│
+└── <span class="node-object">⏱️ Inter-Site Replication</span>
+    <span class="node-meta">→ Scheduled (between sites)</span></div>
+
+      <h3>Replication Flow Diagram</h3>
+      <div class="tree"><span class="node-meta">Intra-site (fast):</span>
+
+  🖥️ DC01  ←── 15 sec ──→  🖥️ DC02
+  🖥️ DC02  ←── 15 sec ──→  🖥️ DC03
+
+<span class="node-meta">Inter-site (scheduled):</span>
+
+  🌐 New York  ←── scheduled ──→  🌐 London
+       🖥️ DC01                     🖥️ DC01
+
+  <span class="node-meta">Compression and scheduling reduce WAN traffic</span></div>
+
+      <div class="example-box">
+        <div class="title">📘 Why Replication Matters</div>
+        <p>A domain has 5 DCs across 3 sites.</p>
+        <p>An admin in New York creates a new user on the New York DC.</p>
+        <p>Within seconds, all other DCs receive the update.</p>
+        <p>Result: The user can log in anywhere — no manual synchronization needed.</p>
+      </div>
+    </section>
+
+    <!-- ==================== TIME SYNC ==================== -->
+    <section class="section" id="fsmo2">
+      <h2>⏱️ Time Synchronization</h2>
+
+      <div class="section-intro">
+        <strong>Kerberos is time-sensitive.</strong> If clocks drift more than 5 minutes, authentication fails. This is why AD has a time hierarchy.
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A strict time hierarchy that keeps all domain machines in sync.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Kerberos tickets contain timestamps. If clocks differ too much, tickets are rejected.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>The PDC Emulator is the authoritative time source. All DCs sync to it, and all member machines sync to their nearest DC.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>Workstation → closest DC → PDC Emulator → external NTP source.</p>
+        </div>
+      </div>
+
+      <h3>Time Hierarchy Diagram</h3>
+      <div class="tree"><span class="node-root">⏱️ AD TIME HIERARCHY</span>
+│
+├── <span class="node-object">🌍 External NTP Source</span>
+│   <span class="node-meta">(e.g., time.windows.com, pool.ntp.org)</span>
+│
+├── <span class="node-object">👑 PDC Emulator</span>
+│   <span class="node-meta">(the forest's authoritative time source)</span>
+│
+├── <span class="node-object">🖥️ Other DCs</span>
+│   <span class="node-meta">(sync to PDC Emulator)</span>
+│
+├── <span class="node-object">💻 Member Servers</span>
+│   <span class="node-meta">(sync to nearest DC)</span>
+│
+└── <span class="node-object">💻 Workstations</span>
+    <span class="node-meta">(sync to nearest DC)</span></div>
+
+      <div class="callout warn">
+        <strong>5-minute rule:</strong> If time drift exceeds 5 minutes, Kerberos authentication fails. This is why time sync is critical.
+      </div>
+    </section>
+
+    <!-- ==================== SYSVOL ==================== -->
+    <section class="section" id="frs">
+      <h2>📁 SYSVOL & FRS</h2>
+
+      <div class="section-intro">
+        <strong>SYSVOL is a shared folder on every DC</strong> that holds Group Policy Objects and logon scripts. It replicates between DCs using DFSR (or older FRS).
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <span class="label">What</span>
+          <p>A shared folder (<code>\\domain\SYSVOL</code>) containing GPO files and scripts.</p>
+        </div>
+        <div class="why-card">
+          <span class="label why">Why</span>
+          <p>Every DC needs the same GPOs so clients get consistent policy regardless of which DC they contact.</p>
+        </div>
+        <div class="why-card">
+          <span class="label how">How</span>
+          <p>SYSVOL replicates via DFSR (modern) or FRS (legacy). Replication is separate from AD database replication.</p>
+        </div>
+        <div class="why-card">
+          <span class="label example">Example</span>
+          <p>You edit a GPO. The change is written to SYSVOL on DC01 and replicates to all other DCs.</p>
+        </div>
+      </div>
+
+      <h3>SYSVOL Structure Diagram</h3>
+      <div class="tree"><span class="node-root">📁 \\contoso.com\SYSVOL\contoso.com\</span>
+│
+├── <span class="node-object">📂 Policies\</span>
+│   ├── <span class="node-meta">{GUID-1}\</span>
+│   │   ├── Machine\ (computer settings)
+│   │   └── User\ (user settings)
+│   └── <span class="node-meta">{GUID-2}\</span>
+│       └── ...
+│
+├── <span class="node-object">📂 scripts\</span>
+│   ├── logon.bat
+│   ├── startup.ps1
+│   └── ...
+│
+└── <span class="node-object">📂 staging\</span>
+    <span class="node-meta">(temporary for DFSR)</span></div>
+
+      <h3>FRS vs DFSR</h3>
+      <table>
+        <tr><th>Feature</th><th>FRS (Legacy)</th><th>DFSR (Modern)</th></tr>
+        <tr><td>Full name</td><td>File Replication Service</td><td>Distributed File System Replication</td></tr>
+        <tr><td>Era</td><td>Windows 2000–2008</td><td>Windows 2008+</td></tr>
+        <tr><td>Replication</td><td>File-by-file</td><td>Block-level (RDC)</td></tr>
+        <tr><td>Efficiency</td><td>Lower</td><td>Higher (deltas only)</td></tr>
+        <tr><td>Status</td><td>Deprecated</td><td>Standard</td></tr>
+      </table>
+
+      <div class="example-box">
+        <div class="title">📘 Why SYSVOL Matters</div>
+        <p>When you log in:</p>
+        <ol>
+          <li>Your workstation contacts a DC</li>
+          <li>The DC tells it which GPOs apply</li>
+          <li>Your workstation reads the GPO files from SYSVOL</li>
+          <li>Settings are applied</li>
+        </ol>
+        <p>Because SYSVOL replicates, any DC can serve GPOs — no single point of failure.</p>
+      </div>
+    </section>
+
+    <!-- ==================== GLOSSARY ==================== -->
+    <section class="section" id="glossary">
+      <h2>📚 Glossary</h2>
+
+      <table>
+        <tr><th>Term</th><th>Definition</th></tr>
+        <tr><td><strong>AD DS</strong></td><td>Active Directory Domain Services</td></tr>
+        <tr><td><strong>ACE</strong></td><td>Access Control Entry</td></tr>
+        <tr><td><strong>ACL</strong></td><td>Access Control List</td></tr>
+        <tr><td><strong>ADCS</strong></td><td>Active Directory Certificate Services</td></tr>
+        <tr><td><strong>AGDLP</strong></td><td>Accounts → Global → Domain Local → Permissions</td></tr>
+        <tr><td><strong>CA</strong></td><td>Certification Authority</td></tr>
+        <tr><td><strong>DACL</strong></td><td>Discretionary ACL</td></tr>
+        <tr><td><strong>DC</strong></td><td>Domain Controller</td></tr>
+        <tr><td><strong>DFSR</strong></td><td>Distributed File System Replication</td></tr>
+        <tr><td><strong>DN</strong></td><td>Distinguished Name</td></tr>
+        <tr><td><strong>DNS</strong></td><td>Domain Name System</td></tr>
+        <tr><td><strong>FSMO</strong></td><td>Flexible Single Master Operations</td></tr>
+        <tr><td><strong>GC</strong></td><td>Global Catalog</td></tr>
+        <tr><td><strong>gMSA</strong></td><td>Group Managed Service Account</td></tr>
+        <tr><td><strong>GPO</strong></td><td>Group Policy Object</td></tr>
+        <tr><td><strong>KDC</strong></td><td>Key Distribution Center</td></tr>
+        <tr><td><strong>LDAP</strong></td><td>Lightweight Directory Access Protocol</td></tr>
+        <tr><td><strong>NTLM</strong></td><td>NT LAN Manager</td></tr>
+        <tr><td><strong>NTDS.dit</strong></td><td>The AD database file</td></tr>
+        <tr><td><strong>OU</strong></td><td>Organizational Unit</td></tr>
+        <tr><td><strong>PDC</strong></td><td>Primary Domain Controller (Emulator)</td></tr>
+        <tr><td><strong>RBCD</strong></td><td>Resource-Based Constrained Delegation</td></tr>
+        <tr><td><strong>RID</strong></td><td>Relative Identifier</td></tr>
+        <tr><td><strong>SACL</strong></td><td>System ACL</td></tr>
+        <tr><td><strong>Schema</strong></td><td>Blueprint of AD classes and attributes</td></tr>
+        <tr><td><strong>SID</strong></td><td>Security Identifier</td></tr>
+        <tr><td><strong>SPN</strong></td><td>Service Principal Name</td></tr>
+        <tr><td><strong>SYSVOL</strong></td><td>Shared folder with GPOs and scripts</td></tr>
+        <tr><td><strong>TGT</strong></td><td>Ticket Granting Ticket</td></tr>
+        <tr><td><strong>TGS</strong></td><td>Ticket Granting Service</td></tr>
+        <tr><td><strong>UPN</strong></td><td>User Principal Name</td></tr>
+        <tr><td><strong>USN</strong></td><td>Update Sequence Number</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section class="section" id="faq">
+      <h2>❓ Common Questions</h2>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the difference between a forest and a domain?</div>
+        <div class="accordion-body">
+          <p>A <strong>forest</strong> is the top-level security boundary — can contain multiple domains sharing a schema. A <strong>domain</strong> is a logical grouping of users and computers with its own database and DCs.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the difference between a global group and a domain local group?</div>
+        <div class="accordion-body">
+          <p><strong>Global groups</strong> contain users from their own domain and can be used anywhere in the forest. <strong>Domain Local groups</strong> contain users from anywhere but only assign permissions within their own domain.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">Why does AD use DNS so heavily?</div>
+        <div class="accordion-body">
+          <p>DNS is how clients find DCs, KDCs, and Global Catalogs. Without DNS, a workstation can't locate the services it needs.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the difference between Kerberos and NTLM?</div>
+        <div class="accordion-body">
+          <p><strong>Kerberos</strong> is ticket-based, more secure, supports mutual authentication. <strong>NTLM</strong> is challenge-response based and older. Modern environments prefer Kerberos.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What is a SID and why does it matter?</div>
+        <div class="accordion-body">
+          <p>A SID is a unique, immutable identifier for every security principal. Permissions use SIDs, not names. Deleting and recreating a user gives them a new SID — old permissions don't carry over.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the difference between physical and logical structure?</div>
+        <div class="accordion-body">
+          <p><strong>Logical:</strong> forest, domain, OU — organizes identity and permissions. <strong>Physical:</strong> sites, subnets — controls network traffic and replication.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What are AD partitions?</div>
+        <div class="accordion-body">
+          <p>AD data is split into partitions: Schema (forest-wide), Configuration (forest-wide), Domain (per domain), and Application (custom). Each has its own replication scope.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the PDC Emulator and why does time matter?</div>
+        <div class="accordion-body">
+          <p>The PDC Emulator is one of the five FSMO roles. It's the authoritative time source for the domain. Kerberos requires clocks to be within 5 minutes, so time sync is critical.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What is SYSVOL?</div>
+        <div class="accordion-body">
+          <p>SYSVOL is a shared folder on every DC that holds Group Policy Objects and logon scripts. It replicates between DCs using DFSR.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">Why do service accounts matter?</div>
+        <div class="accordion-body">
+          <p>Service accounts run services and often have elevated privileges. Traditional ones have passwords that never change. Modern best practice is gMSAs with auto-rotated passwords.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header">What's the difference between authentication and authorization?</div>
+        <div class="accordion-body">
+          <p><strong>Authentication:</strong> Proving who you are (login). <strong>Authorization:</strong> Deciding what you can do (ACLs).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== AUTHOR FOOTER ==================== -->
+    <section class="section" id="author">
+      <div class="author-footer">
+        <h3>⚡ Built & Maintained By</h3>
+        <div class="author-name">Chandan Kumar</div>
+        <p class="tagline">
+          Cybersecurity enthusiast · Ethical Hacker · Pentester<br>
+          Creating practical, deep security learning resources for the community.
+        </p>
+        <div class="author-links">
+          <a href="https://linkedin.com/in/chandan-kumar-eh" target="_blank" rel="noopener" class="author-link linkedin">
+            <span class="icon">💼</span> LinkedIn
+          </a>
+          <a href="https://medium.com/@chandan20516" target="_blank" rel="noopener" class="author-link medium">
+            <span class="icon">✍️</span> Medium
+          </a>
+          <a href="https://github.com/chandan-44" target="_blank" rel="noopener" class="author-link github">
+            <span class="icon">🐙</span> GitHub
+          </a>
+        </div>
+        <p style="margin-top:1.5rem; font-size:0.8rem; color: var(--text-dim);">
+          © 2025 Chandan Kumar · Active Directory Concepts<br>
+          For educational use only.
+        </p>
+      </div>
+    </section>
+
+    <div class="nav-buttons">
+      <button onclick="navigateSection('prev')">← Previous</button>
+      <button onclick="navigateSection('next')">Next →</button>
+    </div>
+
+  </div>
+
+  <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+
+    themeToggle.addEventListener('click', () => {
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      themeToggle.textContent = next === 'dark' ? '🌙 Dark' : '☀️ Light';
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.section');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        const targetId = link.getAttribute('data-target');
+        const target = document.getElementById(targetId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          navLinks.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          if (window.innerWidth <= 900) {
+            document.getElementById('sidebar').classList.remove('open');
+          }
+        }
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          navLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('data-target') === id);
+          });
+        }
+      });
+    }, { threshold: 0.2 });
+
+    sections.forEach(section => observer.observe(section));
+
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      document.getElementById('progressBar').style.width = progress + '%';
+    });
+
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('backToTop');
+      btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+    });
+
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.parentElement.classList.toggle('open');
+      });
+    });
+
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-block');
+      const pre = codeBlock.querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ Copied';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+      }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        btn.textContent = '✓ Copied';
+        setTimeout(() => btn.textContent = 'Copy', 1500);
+      });
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      document.querySelectorAll('.highlight').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+      });
+
+      if (query.length < 2) return;
+
+      const walker = document.createTreeWalker(
+        document.getElementById('main'),
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+
+      const textNodes = [];
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+
+      textNodes.forEach(node => {
+        const text = node.textContent;
+        const lower = text.toLowerCase();
+        const index = lower.indexOf(query);
+        if (index !== -1) {
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + query.length);
+          const span = document.createElement('span');
+          span.className = 'highlight';
+          range.surroundContents(span);
+        }
+      });
+    });
+
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    function navigateSection(direction) {
+      const allSections = Array.from(document.querySelectorAll('.section'));
+      const currentScroll = window.scrollY;
+      let currentIndex = 0;
+      for (let i = 0; i < allSections.length; i++) {
+        if (allSections[i].offsetTop <= currentScroll + 100) {
+          currentIndex = i;
+        }
+      }
+      let nextIndex;
+      if (direction === 'next') {
+        nextIndex = Math.min(currentIndex + 1, allSections.length - 1);
+      } else {
+        nextIndex = Math.max(currentIndex - 1, 0);
+      }
+      allSections[nextIndex].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach((cb, index) => {
+      const key = 'ad-concepts-v2-' + index;
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        cb.checked = saved === 'true';
+      }
+      cb.addEventListener('change', () => {
+        localStorage.setItem(key, cb.checked);
+      });
+    });
+
+    document.querySelector('.accordion')?.classList.add('open');
+  </script>
+
+</body>
+</html>
